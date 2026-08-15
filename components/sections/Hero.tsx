@@ -1,7 +1,13 @@
 import { profile, heroTags } from '@/content/profile'
 import { HeroPipeline } from '@/components/diagram/HeroPipeline'
 import { ActionLink, TechTag } from '@/components/ui/primitives'
-import { ArrowRightIcon, DownloadIcon, GitHubIcon, LinkedInIcon } from '@/components/ui/icons'
+import {
+  ArrowRightIcon,
+  DownloadIcon,
+  GitHubIcon,
+  LeetCodeIcon,
+  LinkedInIcon,
+} from '@/components/ui/icons'
 
 export function Hero() {
   return (
@@ -14,7 +20,9 @@ export function Hero() {
           <div>
             <p className="mono-label mb-6 flex items-center gap-3">
               <span className="relative flex size-1.5">
-                <span className="absolute inline-flex size-full rounded-full bg-emerald-400/70" />
+                {/* The diagram's `output` green, not emerald-400: that measures
+                    1.61:1 on white, which makes the dot invisible on light. */}
+                <span className="absolute inline-flex size-full rounded-full bg-node-output" />
               </span>
               Available for senior GenAI &amp; backend roles
             </p>
@@ -30,7 +38,7 @@ export function Hero() {
               {profile.title}
             </p>
 
-            {/* One emphasis break, not three: the claim in full white, the
+            {/* One emphasis break, not three: the claim at full ink weight, the
                 journey it describes stepped back in muted grey. */}
             <p className="mt-7 max-w-2xl text-[length:var(--text-display)] leading-[1.06] font-semibold tracking-[-0.03em]">
               Building production-grade AI systems{' '}
@@ -62,6 +70,10 @@ export function Hero() {
               <ActionLink href={profile.links.linkedin} external>
                 <LinkedInIcon className="size-4" />
                 LinkedIn
+              </ActionLink>
+              <ActionLink href={profile.links.leetcode} external>
+                <LeetCodeIcon className="size-4" />
+                LeetCode
               </ActionLink>
               <ActionLink href={profile.links.resume} download>
                 <DownloadIcon className="size-4" />

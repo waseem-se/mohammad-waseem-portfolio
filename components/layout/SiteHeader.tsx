@@ -3,10 +3,17 @@
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { cn } from '@/lib/cn'
-import { useScrollSpy } from '@/lib/hooks'
+import { useScrollSpy, useSystemThemeSync } from '@/lib/hooks'
 import { nav } from '@/content/philosophy'
 import { profile } from '@/content/profile'
-import { CloseIcon, GitHubIcon, LinkedInIcon, MenuIcon } from '@/components/ui/icons'
+import {
+  CloseIcon,
+  GitHubIcon,
+  LeetCodeIcon,
+  LinkedInIcon,
+  MenuIcon,
+} from '@/components/ui/icons'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 const sectionIds = nav.map((n) => n.id)
 
@@ -23,6 +30,10 @@ export function SiteHeader({ homeAnchors = true }: { homeAnchors?: boolean }) {
   const active = useScrollSpy(sectionIds, homeAnchors)
   const panelRef = useRef<HTMLDivElement>(null)
   const toggleRef = useRef<HTMLButtonElement>(null)
+
+  // Mounted once here rather than inside ThemeToggle, which renders twice while
+  // the mobile sheet is open.
+  useSystemThemeSync()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -148,6 +159,19 @@ export function SiteHeader({ homeAnchors = true }: { homeAnchors?: boolean }) {
             <LinkedInIcon className="size-[18px]" />
             <span className="sr-only">LinkedIn (opens in a new tab)</span>
           </a>
+          <a
+            href={profile.links.leetcode}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden rounded-md p-2.5 text-muted transition-colors hover:text-ink sm:inline-flex"
+          >
+            <LeetCodeIcon className="size-[18px]" />
+            <span className="sr-only">LeetCode (opens in a new tab)</span>
+          </a>
+
+          {/* No `hidden` breakpoint class: the theme switch is reachable at
+              every width, unlike the two social links above. */}
+          <ThemeToggle className="size-11 justify-center rounded-md text-muted hover:text-ink" />
 
           <button
             ref={toggleRef}
@@ -206,6 +230,25 @@ export function SiteHeader({ homeAnchors = true }: { homeAnchors?: boolean }) {
                 LinkedIn
                 <span className="sr-only"> (opens in a new tab)</span>
               </a>
+              <a
+                href={profile.links.leetcode}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex min-h-12 items-center gap-3 rounded-lg border border-hairline-strong px-4 text-sm text-ink"
+              >
+                <LeetCodeIcon className="size-[18px]" />
+                LeetCode
+                <span className="sr-only"> (opens in a new tab)</span>
+              </a>
+
+              {/* Not redundant with the one in the header row: the sheet traps
+                  focus, so without a copy here the switch is keyboard-
+                  unreachable while the menu is open. The trap's query already
+                  matches any <button>, so it needs no change. */}
+              <ThemeToggle
+                labelled
+                className="min-h-12 gap-3 rounded-lg border border-hairline-strong px-4 text-sm text-ink"
+              />
             </div>
           </nav>
 

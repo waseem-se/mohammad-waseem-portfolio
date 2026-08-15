@@ -71,7 +71,7 @@ export function MetricsStrip() {
   const animate = inView && !reduced
 
   return (
-    <section aria-label="Measured engineering outcomes" className="border-y border-hairline bg-surface/40">
+    <section aria-label="Measured engineering outcomes" className="border-y border-hairline bg-surface">
       <div className="shell">
         <div
           ref={ref}

@@ -41,6 +41,10 @@ export const companies: Company[] = [
             impact: { value: '30%', label: 'lower token usage' },
             tech: ['Prompt Optimization', 'Retrieval Tuning'],
           },
+          {
+            body: 'Worked across multiple vector retrieval and storage architectures — Qdrant and FAISS for dedicated vector search, ClickHouse vector similarity and PostgreSQL with pgvector where embeddings sit alongside existing relational data — selecting per system rather than standardising on a single store.',
+            tech: ['Qdrant', 'FAISS', 'ClickHouse', 'pgvector', 'Vector Search'],
+          },
         ],
       },
       {

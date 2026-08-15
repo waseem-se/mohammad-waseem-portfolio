@@ -12,14 +12,20 @@ import type { FlowGraph, FlowKind, FlowNode } from '@/content/types'
  * without a parallel description.
  */
 
-const kindStyles: Record<FlowKind, { dot: string; border: string; label: string }> = {
-  input: { dot: 'bg-muted', border: 'border-hairline-strong', label: 'text-ink' },
-  compute: { dot: 'bg-accent', border: 'border-accent/30', label: 'text-ink' },
-  store: { dot: 'bg-accent-alt', border: 'border-accent-alt/30', label: 'text-ink' },
-  llm: { dot: 'bg-accent', border: 'border-accent/40', label: 'text-ink' },
-  guard: { dot: 'bg-amber-400/80', border: 'border-amber-400/25', label: 'text-ink' },
-  output: { dot: 'bg-emerald-400/80', border: 'border-emerald-400/25', label: 'text-ink' },
-  human: { dot: 'bg-rose-400/80', border: 'border-rose-400/25', label: 'text-ink' },
+/**
+ * Unlike the hero SVG, which derives its property names from `node.kind`, this
+ * has to spell every class out: Tailwind's scanner only sees literal strings, so
+ * a template literal would generate nothing. The table is pure name lookup
+ * though — the values themselves live in globals.css.
+ */
+const kindStyles: Record<FlowKind, { dot: string; border: string }> = {
+  input: { dot: 'bg-node-input', border: 'border-node-input-line' },
+  compute: { dot: 'bg-node-compute', border: 'border-node-compute-line' },
+  store: { dot: 'bg-node-store', border: 'border-node-store-line' },
+  llm: { dot: 'bg-node-llm', border: 'border-node-llm-line' },
+  guard: { dot: 'bg-node-guard', border: 'border-node-guard-line' },
+  output: { dot: 'bg-node-output', border: 'border-node-output-line' },
+  human: { dot: 'bg-node-human', border: 'border-node-human-line' },
 }
 
 const kindLabel: Record<FlowKind, string> = {
@@ -37,7 +43,7 @@ function Node({ node, compact }: { node: FlowNode; compact?: boolean }) {
   return (
     <div
       className={cn(
-        'flex w-full items-center gap-3 rounded-lg border bg-raised/80 transition-colors',
+        'flex w-full items-center gap-3 rounded-lg border bg-raised transition-colors',
         style.border,
         compact ? 'px-3 py-2' : 'px-4 py-3',
       )}
@@ -48,8 +54,7 @@ function Node({ node, compact }: { node: FlowNode; compact?: boolean }) {
             Container queries below keep the box wide enough for whole words. */}
         <span
           className={cn(
-            'block font-mono leading-tight',
-            style.label,
+            'block font-mono leading-tight text-ink',
             compact ? 'text-[0.6875rem]' : 'text-xs md:text-[0.8125rem]',
           )}
         >
@@ -237,7 +242,7 @@ export function FlowPreview({ graph }: { graph: FlowGraph }) {
       {labels.map((label, i) => (
         <span key={label} className="flex items-center gap-1.5">
           {i > 0 ? <span className="font-mono text-[0.625rem] text-dim">→</span> : null}
-          <span className="rounded border border-hairline bg-raised/60 px-1.5 py-0.5 font-mono text-[0.625rem] text-muted">
+          <span className="rounded border border-hairline bg-raised px-1.5 py-0.5 font-mono text-[0.625rem] text-muted">
             {label}
           </span>
         </span>

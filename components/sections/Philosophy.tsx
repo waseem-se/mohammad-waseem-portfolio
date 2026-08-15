@@ -16,7 +16,7 @@ export function Philosophy() {
       <ul className="grid gap-px overflow-hidden rounded-xl border border-hairline bg-hairline sm:grid-cols-2">
         {principles.map((principle, i) => (
           <Reveal as="li" key={principle.title} delay={i * 70} className="bg-canvas">
-            <div className="h-full bg-surface/50 p-7 md:p-8">
+            <div className="h-full bg-surface p-7 md:p-8">
               <div className="mb-5 flex items-baseline gap-3">
                 <span className="font-mono text-xs text-accent">
                   {String(i + 1).padStart(2, '0')}

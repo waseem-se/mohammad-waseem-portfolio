@@ -77,7 +77,7 @@ export function TechTag({ children, subtle }: { children: ReactNode; subtle?: bo
       className={cn(
         'inline-flex items-center rounded-md border px-2.5 py-1 font-mono text-xs whitespace-nowrap',
         subtle
-          ? 'border-hairline bg-surface/60 text-dim'
+          ? 'border-hairline bg-surface text-dim'
           : 'border-hairline-strong bg-raised text-muted',
       )}
     >
@@ -114,7 +114,12 @@ export function Chip({
 type ButtonVariant = 'primary' | 'secondary' | 'ghost'
 
 const buttonStyles: Record<ButtonVariant, string> = {
-  primary: 'bg-ink text-canvas hover:bg-white border border-transparent',
+  /* `bg-ink text-canvas` inverts correctly in both themes. The hover must too:
+     a literal `hover:bg-white` assumes "ink is light, so brighten it", which on
+     the light theme paints a white button behind a white label. `ink-strong`
+     goes darker on light and to white on dark — 20.6:1 and 19.8:1. Not
+     `hover:opacity-90`, which would fade the label toward the page as well. */
+  primary: 'bg-ink text-canvas hover:bg-ink-strong border border-transparent',
   secondary: 'border border-hairline-strong bg-raised text-ink hover:border-accent/50 hover:bg-surface',
   ghost: 'border border-transparent text-muted hover:text-ink hover:border-hairline-strong',
 }

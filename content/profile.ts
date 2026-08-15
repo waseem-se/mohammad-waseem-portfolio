@@ -14,6 +14,7 @@ export const profile = {
   links: {
     github: 'https://github.com/waseem-se',
     linkedin: 'https://www.linkedin.com/in/waseem-se/',
+    leetcode: 'https://leetcode.com/u/waseem777/',
     resume: '/Mohammad_Waseem_Resume.pdf',
   },
   /** Optional headshot for the About section. Leave null to render no photo. */

@@ -108,3 +108,98 @@ export function useInView<T extends HTMLElement>(rootMargin = '0px 0px -12% 0px'
 
   return { ref, inView }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Theme                                                                      */
+/* -------------------------------------------------------------------------- */
+
+export type Theme = 'light' | 'dark'
+
+const THEME_KEY = 'theme'
+
+/**
+ * `localStorage` *throws* rather than returning null when storage is blocked
+ * (Safari private mode, some embedded webviews), so every access is guarded.
+ * Returns null when the visitor has expressed no preference — the OS decides.
+ */
+function readStoredTheme(): Theme | null {
+  try {
+    const stored = localStorage.getItem(THEME_KEY)
+    return stored === 'dark' || stored === 'light' ? stored : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Next renders one `<meta name="theme-color">` per `prefers-color-scheme`, so
+ * mobile browser chrome follows the OS rather than the stored choice. Painting
+ * both with the active canvas colour makes the toggle win. Reading the value
+ * back off the document rather than repeating a hex here keeps this in step
+ * with the palette in globals.css automatically.
+ */
+function syncThemeColor(root: HTMLElement) {
+  // Doubles as the style flush the transition damper below depends on.
+  const canvas = getComputedStyle(root).getPropertyValue('--canvas').trim()
+  if (!canvas) return
+  document
+    .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
+    .forEach((meta) => {
+      meta.content = canvas
+    })
+}
+
+/**
+ * Flips the class and holds every transition still for the frame it lands in.
+ *
+ * Without the damper only the handful of elements carrying `transition-colors`
+ * would animate while the rest of the page snapped, which reads as a rendering
+ * fault rather than a theme change.
+ */
+function commitTheme(theme: Theme) {
+  const root = document.documentElement
+
+  const damper = document.createElement('style')
+  damper.textContent = '*,*::before,*::after{transition:none !important}'
+  document.head.appendChild(damper)
+
+  root.classList.toggle('dark', theme === 'dark')
+  syncThemeColor(root)
+
+  requestAnimationFrame(() => damper.remove())
+}
+
+/** Switches the theme and remembers the choice. */
+export function applyTheme(theme: Theme) {
+  commitTheme(theme)
+  try {
+    localStorage.setItem(THEME_KEY, theme)
+  } catch {
+    // Storage blocked: the choice still applies, just only for this session.
+  }
+}
+
+/**
+ * `<html class="dark">` is the single source of truth rather than React state,
+ * which is what lets any number of toggles stay in sync with no shared store.
+ */
+export function toggleTheme() {
+  applyTheme(document.documentElement.classList.contains('dark') ? 'light' : 'dark')
+}
+
+/**
+ * Follows the OS preference for as long as the visitor has not picked a theme
+ * themselves. Once they have, a stored choice outranks the OS and this is inert
+ * — matching the precedence the inline script in app/layout.tsx applies on load.
+ */
+export function useSystemThemeSync(): void {
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    const sync = () => {
+      if (readStoredTheme()) return
+      commitTheme(mq.matches ? 'dark' : 'light')
+    }
+    mq.addEventListener('change', sync)
+    return () => mq.removeEventListener('change', sync)
+  }, [])
+}

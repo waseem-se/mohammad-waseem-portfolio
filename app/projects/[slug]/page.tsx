@@ -164,7 +164,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
                     : 'grid gap-10 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:gap-16'
                 }
               >
-                <div className="rounded-xl border border-hairline bg-surface/40 p-6 md:p-8">
+                <div className="rounded-xl border border-hairline bg-surface p-6 md:p-8">
                   <FlowDiagram graph={project.architecture} title={project.name} />
                 </div>
                 <div className="lg:pt-2">
@@ -176,8 +176,12 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
 
             <DetailSection index="03" title="Engineering Decisions">
               <ul className="grid gap-px overflow-hidden rounded-xl border border-hairline bg-hairline sm:grid-cols-2">
+                {/* The fill has to be opaque: `gap-px` over `bg-hairline` draws
+                    the seams by letting the parent show through the gaps, so a
+                    translucent cell bleeds the hairline across the whole card
+                    and collapses the seam to a fraction of its weight. */}
                 {project.decisions.map((decision, i) => (
-                  <li key={decision.heading} className="bg-surface/50 p-6 md:p-7">
+                  <li key={decision.heading} className="bg-surface p-6 md:p-7">
                     <div className="mb-4 flex items-baseline gap-3">
                       <span className="font-mono text-xs text-accent">
                         {String(i + 1).padStart(2, '0')}
@@ -207,7 +211,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
                   {project.details.map((detail) => (
                     <details
                       key={detail.heading}
-                      className="group rounded-lg border border-hairline bg-surface/50 px-5"
+                      className="group rounded-lg border border-hairline bg-surface px-5"
                     >
                       <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-4 text-sm font-medium text-ink marker:content-none">
                         {detail.heading}
@@ -254,7 +258,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
           {/* Next project */}
           <nav
             aria-label="Project navigation"
-            className="border-t border-hairline bg-surface/40 py-12"
+            className="border-t border-hairline bg-surface py-12"
           >
             <div className="shell flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div>

@@ -28,7 +28,9 @@ export const heroFlow: FlowGraph = {
 
 /**
  * The end-to-end stack, top (closest to the user) to bottom (cross-cutting).
- * Every layer names only technologies that appear on the resume.
+ * Every layer names only technologies actually worked with. Most appear on the
+ * resume; the vector-store breadth in the Retrieval layer goes beyond it — see
+ * the provenance note in README.md.
  */
 export const archLayers: ArchLayer[] = [
   {
@@ -58,10 +60,10 @@ export const archLayers: ArchLayer[] = [
   {
     id: 'retrieval',
     name: 'Retrieval',
-    tech: 'Qdrant · FAISS',
+    tech: 'Qdrant · FAISS · ClickHouse · pgvector',
     role: 'Grounds generation in real source material.',
     detail:
-      'Qdrant for served vector search with payload filtering, FAISS for in-process similarity over a bounded index. The choice between them is a deployment decision: a separate service versus a library inside the request path.',
+      'Qdrant for served vector search with payload filtering, FAISS for in-process similarity over a bounded index, ClickHouse and PostgreSQL with pgvector where embeddings belong beside the relational data they describe. These are alternatives rather than a stack — the choice is a deployment decision made per system: a separate service, a library inside the request path, or a column in a database already in the estate.',
   },
   {
     id: 'embeddings',

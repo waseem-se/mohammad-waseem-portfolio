@@ -89,7 +89,7 @@ export function ArchitectureStack() {
                   'flex w-full min-h-14 items-center gap-4 border-b border-hairline px-4 py-3.5 text-left transition-colors duration-200 last:border-b-0 sm:px-5',
                   isSelected
                     ? 'bg-accent-soft'
-                    : 'bg-surface/40 hover:bg-raised',
+                    : 'bg-surface hover:bg-raised',
                 )}
               >
                 <span
@@ -123,7 +123,7 @@ export function ArchitectureStack() {
           id="arch-panel"
           aria-labelledby={active ? `arch-tab-${active.id}` : undefined}
           tabIndex={0}
-          className="rounded-xl border border-hairline bg-surface/50 p-7 md:p-9 lg:sticky lg:top-24 lg:self-start"
+          className="rounded-xl border border-hairline bg-surface p-7 md:p-9 lg:sticky lg:top-24 lg:self-start"
         >
           {active ? (
             <>

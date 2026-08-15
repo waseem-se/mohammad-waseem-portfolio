@@ -30,8 +30,16 @@ export const skillGroups: SkillGroup[] = [
     ],
   },
   {
-    name: 'Retrieval / Data',
-    items: ['Qdrant', 'FAISS', 'SQL', 'Vector Search', 'Embeddings'],
+    name: 'Retrieval / Vector Data',
+    items: [
+      'Qdrant',
+      'FAISS',
+      'ClickHouse Vector Search',
+      'PostgreSQL',
+      'pgvector',
+      'Embeddings',
+      'Semantic Search',
+    ],
   },
   {
     name: 'Frontend',

@@ -1,6 +1,7 @@
 import { codeSection, profile } from '@/content/profile'
 import { Section, SectionHeader, TechTag, ActionLink } from '@/components/ui/primitives'
 import { GitHubIcon, ArrowRightIcon, ExternalIcon } from '@/components/ui/icons'
+import { ProblemSolving } from '@/components/sections/ProblemSolving'
 
 export function CodeAndEngineering() {
   const { curatedRepos } = codeSection
@@ -23,7 +24,7 @@ export function CodeAndEngineering() {
                 href={repo.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group block h-full rounded-xl border border-hairline bg-surface/50 p-6 transition-colors hover:border-hairline-strong"
+                className="group block h-full rounded-xl border border-hairline bg-surface p-6 transition-colors hover:border-hairline-strong"
               >
                 <div className="flex items-start justify-between gap-4">
                   <h3 className="font-mono text-sm text-ink group-hover:text-accent">
@@ -46,7 +47,7 @@ export function CodeAndEngineering() {
         </ul>
       ) : null}
 
-      <div className="flex flex-col items-start gap-6 rounded-xl border border-hairline bg-surface/50 p-7 sm:flex-row sm:items-center sm:justify-between md:p-8">
+      <div className="flex flex-col items-start gap-6 rounded-xl border border-hairline bg-surface p-7 sm:flex-row sm:items-center sm:justify-between md:p-8">
         <div className="flex items-center gap-4">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-hairline-strong bg-raised text-muted">
             <GitHubIcon className="size-5" />
@@ -62,6 +63,8 @@ export function CodeAndEngineering() {
           <ArrowRightIcon className="size-4" />
         </ActionLink>
       </div>
+
+      <ProblemSolving />
     </Section>
   )
 }

@@ -1,5 +1,5 @@
 import { profile } from '@/content/profile'
-import { GitHubIcon, LinkedInIcon, MailIcon } from '@/components/ui/icons'
+import { GitHubIcon, LeetCodeIcon, LinkedInIcon, MailIcon } from '@/components/ui/icons'
 
 export function SiteFooter() {
   const year = 2026
@@ -38,12 +38,21 @@ export function SiteFooter() {
             <LinkedInIcon className="size-[18px]" />
             <span className="sr-only">LinkedIn (opens in a new tab)</span>
           </a>
+          <a
+            href={profile.links.leetcode}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex size-11 items-center justify-center rounded-md text-muted transition-colors hover:text-ink"
+          >
+            <LeetCodeIcon className="size-[18px]" />
+            <span className="sr-only">LeetCode (opens in a new tab)</span>
+          </a>
         </div>
       </div>
 
       <div className="shell mt-8 flex flex-col gap-1 border-t border-hairline pt-6">
         <p className="font-mono text-xs text-dim">
-          © {year} {profile.name}. Built with Next.js and Tailwind CSS.
+          © {year} {profile.name}.
         </p>
       </div>
     </footer>

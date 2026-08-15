@@ -6,7 +6,7 @@
  * *rationale* rather than resume fact are marked with a `REVIEW:` comment.
  */
 
-/** Visual role of a node, used only to pick its stroke/label treatment. */
+/** Visual role of a node, used only to pick its dot and outline colour. */
 export type FlowKind =
   | 'input'
   | 'compute'
@@ -124,6 +124,17 @@ export type Project = {
 export type SkillGroup = {
   name: string
   items: string[]
+}
+
+export type LeetCodeTopic = {
+  name: string
+  count: number
+}
+
+export type LeetCodeTopicGroup = {
+  /** Difficulty tier as LeetCode labels it: Advanced / Intermediate / Fundamental. */
+  name: string
+  topics: LeetCodeTopic[]
 }
 
 export type ArchLayer = {

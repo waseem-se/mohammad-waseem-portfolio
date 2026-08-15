@@ -1,4 +1,5 @@
 import { heroFlow } from '@/content/architecture'
+import type { FlowKind } from '@/content/types'
 import { FlowDiagram } from './FlowDiagram'
 
 /**
@@ -47,25 +48,17 @@ const arrivalAt = (i: number) => (i === 0 ? 0 : ((i * STEP - BOX_H / 2) / SPINE_
 /** Main column, in order. `vectordb` is drawn separately as a lateral branch. */
 const column = ['query', 'router', 'agents', 'retrieval', 'llm', 'guardrails', 'response'] as const
 
-const strokeFor: Record<string, string> = {
-  input: 'var(--color-hairline-strong)',
-  compute: 'color-mix(in oklab, var(--color-accent) 35%, transparent)',
-  store: 'color-mix(in oklab, var(--color-accent-alt) 35%, transparent)',
-  llm: 'color-mix(in oklab, var(--color-accent) 45%, transparent)',
-  guard: 'color-mix(in oklab, #fbbf24 28%, transparent)',
-  output: 'color-mix(in oklab, #34d399 30%, transparent)',
-  human: 'color-mix(in oklab, #fb7185 30%, transparent)',
-}
-
-const dotFor: Record<string, string> = {
-  input: 'var(--color-muted)',
-  compute: 'var(--color-accent)',
-  store: 'var(--color-accent-alt)',
-  llm: 'var(--color-accent)',
-  guard: '#fbbf24',
-  output: '#34d399',
-  human: '#fb7185',
-}
+/**
+ * Node colours come straight from the `--node-*` custom properties in
+ * globals.css — `FlowKind` is a closed union, so the property name is derived
+ * from `node.kind` with no lookup table to keep in step with the palette.
+ *
+ * These reference the raw author properties rather than Tailwind's `--color-*`
+ * aliases: an alias only survives if some generated utility uses it, and a
+ * `var()` inside a JSX attribute string is invisible to Tailwind's scanner.
+ */
+const fillFor = (kind: FlowKind) => `var(--node-${kind})`
+const strokeFor = (kind: FlowKind) => `var(--node-${kind}-line)`
 
 export function HeroPipeline() {
   const byId = new Map(heroFlow.nodes.map((n) => [n.id, n]))
@@ -87,7 +80,7 @@ export function HeroPipeline() {
             y1={SPINE_TOP}
             x2={CENTER_X}
             y2={SPINE_BOTTOM}
-            stroke="var(--color-hairline-strong)"
+            stroke="var(--hairline-strong)"
             strokeWidth={1}
           />
 
@@ -97,7 +90,7 @@ export function HeroPipeline() {
             y1={VDB_Y}
             x2={VDB_X}
             y2={VDB_Y}
-            stroke="var(--color-hairline-strong)"
+            stroke="var(--hairline-strong)"
             strokeWidth={1}
           />
 
@@ -108,7 +101,7 @@ export function HeroPipeline() {
             y1={SPINE_TOP}
             x2={CENTER_X}
             y2={SPINE_BOTTOM}
-            stroke="var(--color-accent)"
+            stroke="var(--accent)"
             strokeWidth={2}
             strokeLinecap="round"
             style={{
@@ -126,7 +119,7 @@ export function HeroPipeline() {
             y1={VDB_Y}
             x2={VDB_X}
             y2={VDB_Y}
-            stroke="var(--color-accent-alt)"
+            stroke="var(--accent-alt)"
             strokeWidth={2}
             strokeLinecap="round"
             style={{
@@ -147,18 +140,18 @@ export function HeroPipeline() {
                 width={VDB_W}
                 height={VDB_H}
                 rx={9}
-                fill="var(--color-raised)"
-                stroke={strokeFor[vectordb.kind]}
+                fill="var(--raised)"
+                stroke={strokeFor(vectordb.kind)}
                 strokeWidth={1}
               />
-              <circle cx={VDB_X + 18} cy={VDB_Y} r={2.5} fill={dotFor[vectordb.kind]} />
+              <circle cx={VDB_X + 18} cy={VDB_Y} r={2.5} fill={fillFor(vectordb.kind)} />
               <text
                 x={VDB_X + 34}
                 y={VDB_Y}
                 dominantBaseline="middle"
                 className="font-mono"
                 fontSize={12.5}
-                fill="var(--color-ink)"
+                fill="var(--ink)"
               >
                 {vectordb.label}
               </text>
@@ -184,7 +177,7 @@ export function HeroPipeline() {
                   height={BOX_H + 6}
                   rx={11}
                   fill="none"
-                  stroke="var(--color-accent)"
+                  stroke="var(--accent)"
                   strokeWidth={1}
                   opacity={0}
                   style={{
@@ -198,18 +191,18 @@ export function HeroPipeline() {
                   width={BOX_W}
                   height={BOX_H}
                   rx={8}
-                  fill="var(--color-raised)"
-                  stroke={strokeFor[node.kind]}
+                  fill="var(--raised)"
+                  stroke={strokeFor(node.kind)}
                   strokeWidth={1}
                 />
-                <circle cx={COL_X + 20} cy={cy} r={2.5} fill={dotFor[node.kind]} />
+                <circle cx={COL_X + 20} cy={cy} r={2.5} fill={fillFor(node.kind)} />
                 <text
                   x={COL_X + 36}
                   y={cy}
                   dominantBaseline="middle"
                   className="font-mono"
                   fontSize={13.5}
-                  fill="var(--color-ink)"
+                  fill="var(--ink)"
                 >
                   {node.label}
                 </text>

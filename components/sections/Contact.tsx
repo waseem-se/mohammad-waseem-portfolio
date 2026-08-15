@@ -1,7 +1,13 @@
 import { contact, profile } from '@/content/profile'
 import { Section, SectionHeader, ActionLink } from '@/components/ui/primitives'
 import { CopyEmail } from '@/components/ui/CopyEmail'
-import { DownloadIcon, GitHubIcon, LinkedInIcon, MailIcon } from '@/components/ui/icons'
+import {
+  DownloadIcon,
+  GitHubIcon,
+  LeetCodeIcon,
+  LinkedInIcon,
+  MailIcon,
+} from '@/components/ui/icons'
 
 export function Contact() {
   return (
@@ -21,7 +27,7 @@ export function Contact() {
           </ul>
         </div>
 
-        <div className="rounded-xl border border-hairline bg-surface/50 p-7 md:p-8">
+        <div className="rounded-xl border border-hairline bg-surface p-7 md:p-8">
           <p className="mono-label mb-4">Direct</p>
           {/* mailto + copy, deliberately not a form — there is no backend to
               receive one, and a form that silently discards a message is worse
@@ -49,6 +55,10 @@ export function Contact() {
               <ActionLink href={profile.links.github} external>
                 <GitHubIcon className="size-4" />
                 GitHub
+              </ActionLink>
+              <ActionLink href={profile.links.leetcode} external>
+                <LeetCodeIcon className="size-4" />
+                LeetCode
               </ActionLink>
             </div>
           </div>

@@ -43,6 +43,10 @@ export const metadata: Metadata = {
     'LangChain',
     'Qdrant',
     'FAISS',
+    'ClickHouse',
+    'PostgreSQL',
+    'pgvector',
+    'Vector Databases',
     'Production AI Systems',
   ],
   alternates: { canonical: '/' },
@@ -67,11 +71,33 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0a0a0b',
-  colorScheme: 'dark',
+  /* Mobile browser chrome. These follow the OS rather than the stored choice,
+     because they are static metadata; `applyTheme` in lib/hooks.ts repaints
+     both once hydrated, so a mismatch lasts only until then. */
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0b' },
+  ],
+  colorScheme: 'light dark',
   width: 'device-width',
   initialScale: 1,
 }
+
+/**
+ * Puts the resolved theme on `<html>` before the first paint.
+ *
+ * Precedence: stored choice -> OS preference -> light.
+ *
+ * `output: 'export'` means there is no server, no middleware, and no cookie, so
+ * a synchronous inline script is the only mechanism available. It cannot flash:
+ * a classic inline script is blocked on any pending render-blocking stylesheet,
+ * so it runs after the CSS is in hand and before anything is painted.
+ *
+ * It deliberately leaves `<meta name="theme-color">` alone. Those are owned by
+ * React through Next's metadata, and `suppressHydrationWarning` on `<html>`
+ * does not extend to descendants — lib/hooks.ts syncs them after hydration.
+ */
+const themeScript = `try{var d=localStorage.getItem('theme');document.documentElement.classList.toggle('dark',d==='dark'||(d!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches))}catch(e){}`
 
 /**
  * Structured data so a search result can render the profile as a Person rather
@@ -92,6 +118,7 @@ const personJsonLd = {
     'Retrieval-Augmented Generation',
     'Multi-Agent Orchestration',
     'Semantic Retrieval',
+    'Vector Databases',
     'LLM Evaluation',
     'Backend Engineering',
   ],
@@ -99,8 +126,18 @@ const personJsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+    /* suppressHydrationWarning covers this element's own attributes and text
+       only — descendants are still checked — which is exactly the scope needed
+       for the `class` the script above writes. React will not later strip it:
+       it rewrites `class` only when the prop value changes, and the font
+       variable string is a build-time constant. */
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${inter.variable} ${jetbrainsMono.variable}`}
+    >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         {/* Scroll reveals start at opacity 0 and are switched on by script. With
             scripting unavailable that would hide the page, so restore them here.
             Done as <noscript> rather than by toggling a class on <html>, which

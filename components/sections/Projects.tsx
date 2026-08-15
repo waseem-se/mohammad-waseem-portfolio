@@ -19,7 +19,7 @@ export function Projects() {
       <ul className="space-y-5">
         {projects.map((project, i) => (
           <Reveal as="li" key={project.slug} delay={i * 60}>
-            <article className="group relative rounded-xl border border-hairline bg-surface/60 transition-colors duration-300 hover:border-hairline-strong">
+            <article className="group relative rounded-xl border border-hairline bg-surface transition-colors duration-300 hover:border-hairline-strong">
               <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-12">
                 <div className="min-w-0">
                   <div className="mb-5 flex flex-wrap items-center gap-2">
