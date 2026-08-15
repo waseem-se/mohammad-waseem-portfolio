@@ -1,0 +1,376 @@
+@import 'tailwindcss';
+
+/* Tailwind v4 ships `dark` as `@media (prefers-color-scheme: dark)`. The theme
+   here is a user choice held in localStorage, so the variant is repointed at
+   the class the inline script in app/layout.tsx puts on <html>. `:where()`
+   keeps the selector at zero specificity, so `dark:block` and `block` tie and
+   source order decides — which is what makes `hidden dark:block` work. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Design tokens.
+
+   Light is the default and dark is the override, both as the same design at
+   two polarities rather than two designs — every text/surface pair holds its
+   contrast ratio to within ~0.5 across the two.
+
+   The raw values live in :root and .dark as plain custom properties, and the
+   @theme inline block below maps them into Tailwind's colour namespace. That
+   indirection is load-bearing, not decoration: @theme values are also read at
+   *build* time, most visibly for the static fallback Tailwind emits alongside
+   every color-mix() opacity modifier. Put the colours straight in @theme and
+   override --color-* in .dark, and `bg-surface/50` compiles to a hardcoded
+   light hex sitting outside the @supports guard, which .dark cannot reach —
+   light panels in dark mode on any engine without color-mix(). Routing through
+   a plain custom property keeps the value live in every consumer.
+
+   :root and .dark are both specificity 0-1-0 and both unlayered, so SOURCE
+   ORDER decides. .dark must stay below :root.
+--------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* Named `canvas`, not `base`: a `--color-base` token would generate a
+     `text-base` colour utility that shadows Tailwind's built-in `text-base`
+     font size, silently painting body copy the same colour as the page. The
+     same reasoning is why the diagram tokens below are `node-` prefixed. */
+  --canvas: #ffffff;
+  --surface: #f2f5fa;
+  --raised: #e6ebf3;
+
+  /* Slate-tinted rather than neutral, so the rules read cool grey-blue on
+     white instead of flat grey. Light needs a touch more alpha than dark to
+     land the same perceptual weight (ΔL* 7.33 vs 7.04). */
+  --hairline: rgba(15, 23, 42, 0.09);
+  --hairline-strong: rgba(15, 23, 42, 0.17);
+
+  /* Three text weights, all of which carry real content, so all three clear
+     WCAG AA (4.5:1) against both the page background and the raised surface.
+     The binding pair in either theme is `dim` on `raised`: 5.22 here, 5.07 in
+     dark. `dim` was once #6a6a74 at 3.70:1 — too dark for the tech tags,
+     dates, and metric captions it is used for. Do not walk it back. */
+  --ink: #131820; /* 17.8:1 on canvas, 14.9:1 on raised */
+  --muted: #4d5666; /*  7.4:1 on canvas,  6.2:1 on raised */
+  --dim: #586171; /*  6.2:1 on canvas,  5.2:1 on raised */
+
+  /* Hover state of the inverted primary button. On light it has to go darker;
+     on dark it goes to white. A literal `hover:bg-white` only works in one
+     of those directions — see components/ui/primitives.tsx. */
+  --ink-strong: #03060d;
+
+  /* The dark accent #6e8bf5 measures 3.0:1 on white, unusable for the section
+     indices, links, and metric numbers it carries. Darkened to hold the dark
+     theme's 6.3:1, with 2° of hue drift. */
+  --accent: #3550c9; /*  6.7:1 on canvas */
+  --accent-alt: #6a4fc9;
+  /* Derived rather than a second hardcoded RGB, so it tracks the accent.
+     Composites to #e7eaf9 on white — the same weight as `raised`, so an accent
+     chip and a neutral chip sit at identical elevation. Guardrail: never stack
+     this on `raised`; `dim` would land at 4.39 (4.15 in dark). */
+  --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
+
+  /* Diagram node fills. Five of the seven kinds reuse palette tokens; only
+     guard/output/human need their own value. Deliberately not Tailwind's 400
+     shades here — emerald-400 measures 1.97:1 on white, below the 3:1 floor
+     for non-text UI. These all clear 3:1 against `raised`. */
+  --node-input: var(--muted);
+  --node-compute: var(--accent);
+  --node-store: var(--accent-alt);
+  --node-llm: var(--accent);
+  --node-guard: #a16207; /* 4.11:1 on raised */
+  --node-output: #047857; /* 4.58:1 on raised */
+  --node-human: #be123c; /* 5.25:1 on raised */
+
+  /* How much of the node's own colour goes into its 1px outline. Light needs
+     ~1.3x dark to land the same edge weight. `llm` and `compute` share a fill,
+     so the heavier mix is the only thing telling them apart. */
+  --node-stroke-mix: 42%;
+  --node-stroke-mix-strong: 55%;
+
+  /* Hero grid lines. Not a Tailwind colour token — nothing needs a
+     `bg-grid-line` utility. 1px antialiased lines lose more to display glare
+     on a bright field than a dark one, hence more alpha than dark's 0.028. */
+  --grid-line: rgba(15, 23, 42, 0.04);
+}
+
+.dark {
+  color-scheme: dark;
+
+  --canvas: #0a0a0b;
+  --surface: #131316;
+  --raised: #1a1a1f;
+
+  --hairline: rgba(255, 255, 255, 0.07);
+  --hairline-strong: rgba(255, 255, 255, 0.13);
+
+  --ink: #ededf0; /* 16.9:1 on canvas, 14.8:1 on raised */
+  --muted: #9a9aa4; /*  7.1:1 on canvas,  6.2:1 on raised */
+  --dim: #8a8a94; /*  5.8:1 on canvas,  5.1:1 on raised */
+
+  --ink-strong: #ffffff;
+
+  --accent: #6e8bf5; /*  6.3:1 on canvas */
+  --accent-alt: #8b7cf0;
+  --accent-soft: color-mix(in oklab, var(--accent) 14%, transparent);
+
+  --node-input: var(--muted);
+  --node-compute: var(--accent);
+  --node-store: var(--accent-alt);
+  --node-llm: var(--accent);
+  --node-guard: #fbbf24;
+  --node-output: #34d399;
+  --node-human: #fb7185;
+
+  --node-stroke-mix: 32%;
+  --node-stroke-mix-strong: 45%;
+
+  --grid-line: rgba(255, 255, 255, 0.028);
+}
+
+/* Node outlines, derived from the two blocks above rather than written twice.
+   Custom properties substitute at computed-value time on the element that
+   declares them, and .dark lands on <html> — the same element as :root — so
+   these pick up whichever palette is active with no per-theme duplication.
+   Declared after .dark only for readability; they collide with nothing. */
+:root {
+  --node-input-line: var(--hairline-strong);
+  --node-compute-line: color-mix(in oklab, var(--node-compute) var(--node-stroke-mix), transparent);
+  --node-store-line: color-mix(in oklab, var(--node-store) var(--node-stroke-mix), transparent);
+  --node-llm-line: color-mix(in oklab, var(--node-llm) var(--node-stroke-mix-strong), transparent);
+  --node-guard-line: color-mix(in oklab, var(--node-guard) var(--node-stroke-mix), transparent);
+  --node-output-line: color-mix(in oklab, var(--node-output) var(--node-stroke-mix), transparent);
+  --node-human-line: color-mix(in oklab, var(--node-human) var(--node-stroke-mix), transparent);
+}
+
+/* Colour tokens, mapped `inline` so the generated utilities emit
+   `var(--surface)` rather than `var(--color-surface)` and re-resolve the
+   instant `.dark` lands on <html>. */
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+
+  --color-ink: var(--ink);
+  --color-ink-strong: var(--ink-strong);
+  --color-muted: var(--muted);
+  --color-dim: var(--dim);
+
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-alt: var(--accent-alt);
+
+  --color-node-input: var(--node-input);
+  --color-node-compute: var(--node-compute);
+  --color-node-store: var(--node-store);
+  --color-node-llm: var(--node-llm);
+  --color-node-guard: var(--node-guard);
+  --color-node-output: var(--node-output);
+  --color-node-human: var(--node-human);
+
+  --color-node-input-line: var(--node-input-line);
+  --color-node-compute-line: var(--node-compute-line);
+  --color-node-store-line: var(--node-store-line);
+  --color-node-llm-line: var(--node-llm-line);
+  --color-node-guard-line: var(--node-guard-line);
+  --color-node-output-line: var(--node-output-line);
+  --color-node-human-line: var(--node-human-line);
+}
+
+/* Theme-invariant tokens. Plain `@theme`, not `inline`: there is nothing to
+   swap, and emitting them as real custom properties is what keeps
+   `text-[length:var(--text-section)]` in primitives.tsx resolving. Tailwind
+   merges every @theme block in the file, so the two forms coexist. */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-jb), ui-monospace, 'SFMono-Regular', monospace;
+
+  --text-display: clamp(2.25rem, 1.2rem + 4.4vw, 4.25rem);
+  --text-section: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
+}
+
+/* ---------------------------------------------------------------------------
+   Base
+--------------------------------------------------------------------------- */
+@layer base {
+  * {
+    border-color: var(--color-hairline);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Sticky header height + breathing room, so anchored sections land clear. */
+    scroll-padding-top: 5.5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    /* `clip` rather than `hidden` so it cannot create a scroll container that
+       breaks position: sticky on the header. */
+    overflow-x: clip;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-accent-soft);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Utilities
+--------------------------------------------------------------------------- */
+@utility shell {
+  width: 100%;
+  max-width: 78rem;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+
+  @media (min-width: 768px) {
+    padding-inline: 2rem;
+  }
+
+  @media (min-width: 1280px) {
+    padding-inline: 3rem;
+  }
+}
+
+/* Faint engineering grid. One gradient, no image asset, hero only. */
+@utility grid-field {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 100% 65% at 50% 0%, #000 30%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 100% 65% at 50% 0%, #000 30%, transparent 78%);
+}
+
+@utility mono-label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-dim);
+}
+
+/* ---------------------------------------------------------------------------
+   Motion. Every animated behaviour is defined here and every one of them is
+   disabled wholesale by the reduced-motion block at the bottom of this file.
+--------------------------------------------------------------------------- */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The packet travelling the hero pipeline: a short dash chasing the path.
+   Offset runs 0 -> -(path length), so the dash enters at the start and leaves
+   at the end in one traverse, with no idle time off-path. */
+@keyframes packet {
+  0% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  94% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: calc(var(--dash) * -1px);
+    opacity: 0;
+  }
+}
+
+/* Brief flash as the packet reaches a stage. Shares the packet's period, so an
+   animation-delay equal to the packet's travel time to that node keeps them in
+   sync for every cycle. */
+@keyframes node-hit {
+  0% {
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.9;
+  }
+  22% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Scroll reveal. Starts hidden and is switched on by IntersectionObserver
+   adding [data-visible]; if JS never runs, the no-JS rule below shows it. */
+.reveal {
+  opacity: 0;
+}
+
+.reveal[data-visible='true'] {
+  animation: rise 0.62s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* If scripting is unavailable the flag above is never set, so the <noscript>
+   block in app/layout.tsx restores these to full opacity. */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Reveals resolve to their final state rather than animating. */
+  .reveal,
+  .reveal[data-visible='true'] {
+    opacity: 1 !important;
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* The pipeline renders as a static diagram: connectors stay, the packet and
+     the stage flashes are removed entirely rather than merely sped up. */
+  [data-flow-packet],
+  [data-flow-pulse] {
+    display: none !important;
+    animation: none !important;
+  }
+}
