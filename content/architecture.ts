@@ -9,8 +9,12 @@ export const heroFlow: FlowGraph = {
     { id: 'query', label: 'User Query', kind: 'input' },
     { id: 'router', label: 'Intent / Router', kind: 'compute' },
     { id: 'agents', label: 'Agent Orchestration', kind: 'compute' },
-    { id: 'retrieval', label: 'Retrieval', kind: 'compute' },
-    { id: 'vectordb', label: 'Vector DB', kind: 'store' },
+    { id: 'retrieval', label: 'Retrieval', kind: 'retrieval' },
+    /* Queried by Retrieval, not a stage the request passes through — see the
+       `attachedTo` note in content/types.ts. The SVG has always drawn it as a
+       lateral branch; this is what makes the narrow-screen FlowDiagram agree,
+       instead of splicing it into the chain as `Retrieval -> Vector DB -> LLM`. */
+    { id: 'vectordb', label: 'Vector DB', kind: 'store', attachedTo: 'retrieval' },
     { id: 'llm', label: 'LLM', kind: 'llm' },
     { id: 'guardrails', label: 'Validation / Guardrails', kind: 'guard' },
     { id: 'response', label: 'Structured Response', kind: 'output' },
@@ -20,7 +24,7 @@ export const heroFlow: FlowGraph = {
     { from: 'router', to: 'agents' },
     { from: 'agents', to: 'retrieval' },
     { from: 'retrieval', to: 'vectordb', bidirectional: true },
-    { from: 'vectordb', to: 'llm' },
+    { from: 'retrieval', to: 'llm' },
     { from: 'llm', to: 'guardrails' },
     { from: 'guardrails', to: 'response' },
   ],

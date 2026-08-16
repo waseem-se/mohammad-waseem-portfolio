@@ -108,7 +108,10 @@ export function ArchitectureStack() {
                   >
                     {layer.name}
                   </span>
-                  <span className="mt-0.5 block truncate font-mono text-[0.6875rem] text-dim">
+                  {/* Wraps rather than truncates: the longest tech string
+                      overruns the tab on a 320px screen, and the ` · `
+                      separators give it clean break points. */}
+                  <span className="mt-0.5 block font-mono text-[0.6875rem] leading-snug text-dim">
                     {layer.tech}
                   </span>
                 </span>
