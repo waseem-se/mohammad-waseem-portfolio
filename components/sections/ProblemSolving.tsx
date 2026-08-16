@@ -21,12 +21,15 @@ export function ProblemSolving() {
 
       <div className="rounded-xl border border-hairline bg-surface p-7 md:p-8">
         <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex min-w-0 items-center gap-4">
             <span className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-hairline-strong bg-raised text-muted">
               <LeetCodeIcon className="size-5" />
             </span>
-            <div>
-              <p className="font-mono text-sm text-ink">leetcode.com/u/{leetcode.username}</p>
+            <div className="min-w-0">
+              {/* `min-w-0` on both flex items plus `break-all` — a mono URL has
+                  no natural break opportunity, so without these the row keeps
+                  its intrinsic width and overflows the shell below ~300px. */}
+              <p className="font-mono text-sm break-all text-ink">leetcode.com/u/{leetcode.username}</p>
               <p className="mt-1 text-sm text-dim">
                 Rank <span className="font-mono tabular-nums">{leetcode.rank}</span>
                 {' · '}

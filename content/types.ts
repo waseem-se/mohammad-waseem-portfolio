@@ -6,10 +6,18 @@
  * *rationale* rather than resume fact are marked with a `REVIEW:` comment.
  */
 
-/** Visual role of a node, used only to pick its dot and outline colour. */
+/**
+ * Visual role of a node, used to pick its dot, outline colour, and — for `llm`
+ * — its outline *style*.
+ *
+ * `retrieval` is separate from `compute` on purpose. Lumping them together gave
+ * routing, orchestration, and retrieval one shared colour, which flattened the
+ * distinction the site spends its Principles section drawing.
+ */
 export type FlowKind =
   | 'input'
   | 'compute'
+  | 'retrieval'
   | 'store'
   | 'llm'
   | 'guard'
@@ -22,6 +30,13 @@ export type FlowNode = {
   kind: FlowKind
   /** Optional short caption rendered under the label on wide viewports. */
   note?: string
+  /**
+   * Id of the node this one hangs off laterally rather than following in the
+   * sequence — a store queried by a step, not a stage the request passes
+   * through. Renderers draw it beside its host; it never occupies a position
+   * in the main chain.
+   */
+  attachedTo?: string
 }
 
 export type FlowEdge = {

@@ -14,8 +14,11 @@ import { FlowDiagram } from './FlowDiagram'
  * each stage and re-emerges — the flow reads as work entering and leaving a
  * component rather than a dot sliding over a line.
  *
- * Below `md` the SVG is display:none and the shared FlowDiagram renders the
- * same graph as a readable vertical flow.
+ * Below `lg` the SVG is display:none and the shared FlowDiagram renders the
+ * same graph as a readable vertical flow. `lg` is where Hero.tsx opens its
+ * second column — the 500px track this viewBox is drawn for — so the two
+ * breakpoints must stay in step. Revealing the SVG any earlier stretches it
+ * across the full single-column shell, where it stands ~805px tall at 768px.
  */
 
 /** One full packet traverse. Node flashes are phased against this. */
@@ -60,6 +63,41 @@ const column = ['query', 'router', 'agents', 'retrieval', 'llm', 'guardrails', '
 const fillFor = (kind: FlowKind) => `var(--node-${kind})`
 const strokeFor = (kind: FlowKind) => `var(--node-${kind}-line)`
 
+/**
+ * A chevron pointing down the spine.
+ *
+ * Direction used to be carried entirely by the animated packet, which
+ * `prefers-reduced-motion` removes outright — leaving stages joined by plain
+ * undirected lines. These are static, so the flow still reads as a flow when
+ * the motion is gone, in a screenshot, or before the first packet arrives.
+ */
+function SpineChevron({ x, y }: { x: number; y: number }) {
+  return (
+    <path
+      d={`M ${x - 4} ${y - 2.5} L ${x} ${y + 2} L ${x + 4} ${y - 2.5}`}
+      fill="none"
+      stroke="var(--hairline-strong)"
+      strokeWidth={1.25}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  )
+}
+
+/** Chevron on the lateral branch. `dir` is 1 for rightward, -1 for leftward. */
+function LateralChevron({ x, y, dir }: { x: number; y: number; dir: 1 | -1 }) {
+  return (
+    <path
+      d={`M ${x - 2.5 * dir} ${y - 4} L ${x + 2 * dir} ${y} L ${x - 2.5 * dir} ${y + 4}`}
+      fill="none"
+      stroke="var(--hairline-strong)"
+      strokeWidth={1.25}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  )
+}
+
 export function HeroPipeline() {
   const byId = new Map(heroFlow.nodes.map((n) => [n.id, n]))
   const vectordb = byId.get('vectordb')
@@ -67,7 +105,7 @@ export function HeroPipeline() {
   return (
     <>
       {/* Wide screens: the SVG showpiece. */}
-      <div className="hidden md:block">
+      <div className="hidden lg:block">
         <svg
           viewBox="0 0 500 572"
           role="img"
@@ -84,7 +122,14 @@ export function HeroPipeline() {
             strokeWidth={1}
           />
 
-          {/* Lateral branch: Retrieval <-> Vector DB. */}
+          {/* Chevrons in each spine gap, between one box and the next. */}
+          {column.slice(0, -1).map((id, i) => (
+            <SpineChevron key={`chev-${id}`} x={CENTER_X} y={FIRST_Y + i * STEP + STEP / 2} />
+          ))}
+
+          {/* Lateral branch: Retrieval <-> Vector DB. Bidirectional — the stage
+              queries the store and reads the result back; it is not a step the
+              request passes through. */}
           <line
             x1={LATERAL_FROM}
             y1={VDB_Y}
@@ -93,6 +138,8 @@ export function HeroPipeline() {
             stroke="var(--hairline-strong)"
             strokeWidth={1}
           />
+          <LateralChevron x={VDB_X - 5} y={VDB_Y} dir={1} />
+          <LateralChevron x={LATERAL_FROM + 5} y={VDB_Y} dir={-1} />
 
           {/* The packet. Sits above the spine, below the boxes. */}
           <line
@@ -194,8 +241,24 @@ export function HeroPipeline() {
                   fill="var(--raised)"
                   stroke={strokeFor(node.kind)}
                   strokeWidth={1}
+                  /* The model stage is drawn provisional — dashed outline and a
+                     hollow dot below — matching FlowDiagram. It shares
+                     `compute`'s hue, so this is what separates them, and it
+                     keeps the distinction off colour alone. */
+                  strokeDasharray={node.kind === 'llm' ? '5 4' : undefined}
                 />
-                <circle cx={COL_X + 20} cy={cy} r={2.5} fill={fillFor(node.kind)} />
+                {node.kind === 'llm' ? (
+                  <circle
+                    cx={COL_X + 20}
+                    cy={cy}
+                    r={3}
+                    fill="none"
+                    stroke={fillFor(node.kind)}
+                    strokeWidth={1.5}
+                  />
+                ) : (
+                  <circle cx={COL_X + 20} cy={cy} r={2.5} fill={fillFor(node.kind)} />
+                )}
                 <text
                   x={COL_X + 36}
                   y={cy}
@@ -213,7 +276,7 @@ export function HeroPipeline() {
       </div>
 
       {/* Narrow screens: the same graph as a readable vertical flow. */}
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <FlowDiagram graph={heroFlow} title="AI request path" compact />
       </div>
     </>

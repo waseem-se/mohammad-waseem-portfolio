@@ -48,12 +48,15 @@ export function CodeAndEngineering() {
       ) : null}
 
       <div className="flex flex-col items-start gap-6 rounded-xl border border-hairline bg-surface p-7 sm:flex-row sm:items-center sm:justify-between md:p-8">
-        <div className="flex items-center gap-4">
+        <div className="flex min-w-0 items-center gap-4">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-hairline-strong bg-raised text-muted">
             <GitHubIcon className="size-5" />
           </span>
-          <div>
-            <p className="font-mono text-sm text-ink">github.com/waseem-se</p>
+          <div className="min-w-0">
+            {/* Matches the LeetCode card: a mono URL cannot break on its own,
+                so the row needs `min-w-0` + `break-all` to stay inside the
+                shell on the narrowest screens. */}
+            <p className="font-mono text-sm break-all text-ink">github.com/waseem-se</p>
             <p className="mt-1 text-sm text-dim">Public profile</p>
           </div>
         </div>

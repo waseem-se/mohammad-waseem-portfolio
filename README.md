@@ -95,6 +95,19 @@ branching lanes) in `content/`, rendered by one component,
 of the same data, not a second asset. Diagrams render as semantic HTML with CSS connectors,
 so the text is selectable and screen-readable; each carries a generated prose description.
 
+A node with `attachedTo` hangs laterally off its host rather than taking a place in the
+chain — a store a stage queries, not a stage the request passes through. Without it the
+renderer splices such a node into the sequence, which is how the narrow-screen hero once
+drew `Retrieval -> Vector DB -> LLM` while the SVG drew Vector DB as a side branch. The
+generated prose description follows the same split, so the two never disagree.
+
+**Node kinds carry meaning, and not through colour alone.** `retrieval` is its own kind
+rather than a flavour of `compute`: with them merged, routing, orchestration, and retrieval
+all rendered in one indigo, flattening the distinction the Principles section is built on.
+`llm` still shares `compute`'s hue and is separated by *form* — dashed outline, hollow dot,
+in both renderers — which states that the model stage is the probabilistic one and keeps
+the difference legible without relying on hue.
+
 **Client JavaScript is opt-in.** Everything is a React Server Component except seven files
 that need state: the header (scroll-spy), the mobile nav sheet, the metrics count-up, the
 experience timeline, the architecture tablist, the copy-email button, and the theme toggle.
@@ -104,7 +117,9 @@ There is no animation library and no icon library — the icons in
 **The hero pipeline** ([HeroPipeline.tsx](components/diagram/HeroPipeline.tsx)) is
 server-rendered inline SVG. A packet traverses the spine on a CSS `stroke-dashoffset`
 animation, and each stage flashes via an `animation-delay` computed from its distance along
-the path. Node rectangles paint after the spine so the packet passes behind them.
+the path. Node rectangles paint after the spine so the packet passes behind them. Static
+chevrons sit in each spine gap and at both ends of the lateral branch: direction must not
+depend on the packet, which reduced motion removes and a screenshot never catches.
 
 **One naming trap to avoid:** do not add a `--color-base` token. It would generate a
 `text-base` *colour* utility that shadows Tailwind's built-in `text-base` *font size* and
@@ -155,6 +170,10 @@ Verified rather than assumed:
   architecture stack (arrows / Home / End with wrapping), and a mobile nav sheet that traps
   focus, closes on Escape, and restores focus to its trigger.
 - `prefers-reduced-motion` removes the packet, the stage flashes, and the scroll reveals
-  outright, and the metrics render their real values rather than a frozen counter.
+  outright, and the metrics render their real values rather than a frozen counter. The
+  pipeline still reads as directed: the chevrons are static, so nothing about the flow is
+  carried by motion alone.
+- No diagram distinction rests on colour alone — `llm` is dashed and hollow-dotted as well
+  as tinted, and every node carries an `sr-only` kind label.
 - No horizontal overflow at 320 / 375 / 768 / 1024 / 1440.
 - Content stays visible without JavaScript (a `<noscript>` rule restores the reveals).

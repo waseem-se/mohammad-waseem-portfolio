@@ -156,11 +156,15 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
 
             <DetailSection index="02" title="Architecture">
               {/* Branching diagrams get the wider track; linear ones stay narrow
-                  so the solution copy keeps a readable measure beside them. */}
+                  so the solution copy keeps a readable measure beside them.
+                  The branching case splits at `xl`, not `lg`: FlowDiagram fans
+                  its lanes out on a container query, and at `lg` this grid
+                  leaves the figure ~424px — under that threshold, so the lanes
+                  would silently stack on a 1024px laptop. */}
               <div
                 className={
                   project.architecture.lanes?.length
-                    ? 'grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:gap-14'
+                    ? 'grid gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] xl:gap-14'
                     : 'grid gap-10 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:gap-16'
                 }
               >

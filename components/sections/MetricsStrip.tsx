@@ -50,7 +50,7 @@ function MetricItem({ value, label, animate }: { value: string; label: string; a
   const display = useCountUp(value, animate)
 
   return (
-    <div className="border-l border-hairline px-4 py-5 first:border-l-0 sm:px-5 md:py-6">
+    <div className="bg-surface px-4 py-5 last:col-span-2 sm:px-5 md:py-6 xl:last:col-span-1">
       {/* The literal value stays available to assistive tech regardless of the
           animated digits, which change many times a second. */}
       <div
@@ -73,9 +73,19 @@ export function MetricsStrip() {
   return (
     <section aria-label="Measured engineering outcomes" className="border-y border-hairline bg-surface">
       <div className="shell">
+        {/* Hairlines are drawn as `gap-px` seams over `bg-hairline` rather than
+            per-cell borders, so the rules stay correct at 2, 4 and 7 columns
+            without any `first:`/`nth-child` arithmetic to get wrong per
+            breakpoint. Each cell must therefore carry an opaque `bg-surface`.
+            The 7-across waits for `xl`: at 1024px seven columns leave ~97px of
+            content per cell, which wraps the longer labels to four lines.
+            NOTE: `last:col-span-2` assumes `metrics.length === 7`. Seven tiles
+            into neither 2 nor 4 columns, and the ragged empty cell would
+            otherwise show through as a tinted block. Revisit if a metric is
+            added or removed. */}
         <div
           ref={ref}
-          className="grid grid-cols-2 divide-y divide-hairline sm:grid-cols-4 lg:grid-cols-7 lg:divide-y-0"
+          className="grid grid-cols-2 gap-px bg-hairline sm:grid-cols-4 xl:grid-cols-7"
         >
           {metrics.map((metric) => (
             <MetricItem

@@ -15,7 +15,11 @@ export function Hero() {
       <div aria-hidden className="grid-field pointer-events-none absolute inset-0 -z-10" />
 
       <div className="shell pt-16 pb-20 md:pt-24 md:pb-28">
-        <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,500px)] lg:gap-14">
+        {/* The diagram track opens narrow at `lg` and reaches its 500px design
+            width at `xl`. At exactly 1024px a 500px track leaves the headline a
+            404px measure while the display clamp still resolves to ~64px,
+            which wraps it to eight lines and hyphen-breaks "production-grade". */}
+        <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] lg:gap-14 xl:grid-cols-[minmax(0,1fr)_minmax(0,500px)]">
           {/* Copy */}
           <div>
             <p className="mono-label mb-6 flex items-center gap-3">

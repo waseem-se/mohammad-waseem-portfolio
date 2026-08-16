@@ -71,12 +71,13 @@
      this on `raised`; `dim` would land at 4.39 (4.15 in dark). */
   --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
 
-  /* Diagram node fills. Five of the seven kinds reuse palette tokens; only
-     guard/output/human need their own value. Deliberately not Tailwind's 400
-     shades here — emerald-400 measures 1.97:1 on white, below the 3:1 floor
-     for non-text UI. These all clear 3:1 against `raised`. */
+  /* Diagram node fills. Four of the eight kinds reuse palette tokens; the rest
+     need their own value. Deliberately not Tailwind's 400 shades here —
+     emerald-400 measures 1.97:1 on white, below the 3:1 floor for non-text UI.
+     These all clear 3:1 against `raised`. */
   --node-input: var(--muted);
   --node-compute: var(--accent);
+  --node-retrieval: #0e7490; /* 4.48:1 on raised */
   --node-store: var(--accent-alt);
   --node-llm: var(--accent);
   --node-guard: #a16207; /* 4.11:1 on raised */
@@ -85,7 +86,10 @@
 
   /* How much of the node's own colour goes into its 1px outline. Light needs
      ~1.3x dark to land the same edge weight. `llm` and `compute` share a fill,
-     so the heavier mix is the only thing telling them apart. */
+     so the heavier mix helps — but it is not load-bearing on its own: the
+     renderers also draw `llm` with a dashed outline and a hollow dot, which is
+     what actually separates them at reading size, and what keeps the
+     distinction off colour alone. */
   --node-stroke-mix: 42%;
   --node-stroke-mix-strong: 55%;
 
@@ -117,6 +121,7 @@
 
   --node-input: var(--muted);
   --node-compute: var(--accent);
+  --node-retrieval: #22d3ee; /* 9.59:1 on raised */
   --node-store: var(--accent-alt);
   --node-llm: var(--accent);
   --node-guard: #fbbf24;
@@ -137,6 +142,7 @@
 :root {
   --node-input-line: var(--hairline-strong);
   --node-compute-line: color-mix(in oklab, var(--node-compute) var(--node-stroke-mix), transparent);
+  --node-retrieval-line: color-mix(in oklab, var(--node-retrieval) var(--node-stroke-mix), transparent);
   --node-store-line: color-mix(in oklab, var(--node-store) var(--node-stroke-mix), transparent);
   --node-llm-line: color-mix(in oklab, var(--node-llm) var(--node-stroke-mix-strong), transparent);
   --node-guard-line: color-mix(in oklab, var(--node-guard) var(--node-stroke-mix), transparent);
@@ -166,6 +172,7 @@
 
   --color-node-input: var(--node-input);
   --color-node-compute: var(--node-compute);
+  --color-node-retrieval: var(--node-retrieval);
   --color-node-store: var(--node-store);
   --color-node-llm: var(--node-llm);
   --color-node-guard: var(--node-guard);
@@ -174,6 +181,7 @@
 
   --color-node-input-line: var(--node-input-line);
   --color-node-compute-line: var(--node-compute-line);
+  --color-node-retrieval-line: var(--node-retrieval-line);
   --color-node-store-line: var(--node-store-line);
   --color-node-llm-line: var(--node-llm-line);
   --color-node-guard-line: var(--node-guard-line);

@@ -25,7 +25,7 @@ export const projects: Project[] = [
         { id: 'q', label: 'Natural Language Query', kind: 'input' },
         { id: 'intent', label: 'Intent / Task Understanding', kind: 'compute' },
         { id: 'orch', label: 'Agent Orchestration', kind: 'compute' },
-        { id: 'retrieval', label: 'Retrieval', kind: 'store', note: 'Schema context' },
+        { id: 'retrieval', label: 'Retrieval', kind: 'retrieval', note: 'Schema context' },
         { id: 'sql', label: 'SQL Generation', kind: 'llm' },
         { id: 'validate', label: 'Schema Validation', kind: 'guard' },
         { id: 'exec', label: 'Execution', kind: 'compute' },
@@ -193,7 +193,7 @@ export const projects: Project[] = [
       nodes: [
         { id: 'hook', label: 'Jira Webhook', kind: 'input' },
         { id: 'api', label: 'FastAPI', kind: 'compute' },
-        { id: 'retrieval', label: 'Semantic Retrieval', kind: 'compute' },
+        { id: 'retrieval', label: 'Semantic Retrieval', kind: 'retrieval' },
         { id: 'qdrant', label: 'Qdrant', kind: 'store' },
         { id: 'tickets', label: 'Historical Tickets', kind: 'store' },
         { id: 'gemini', label: 'Gemini Flash', kind: 'llm' },
@@ -263,9 +263,9 @@ export const projects: Project[] = [
     architecture: {
       nodes: [
         { id: 'intent', label: 'User Intent', kind: 'input' },
-        { id: 'embed', label: 'Embedding', kind: 'compute' },
+        { id: 'embed', label: 'Embedding', kind: 'retrieval' },
         { id: 'faiss', label: 'FAISS', kind: 'store' },
-        { id: 'retrieval', label: 'Semantic Retrieval', kind: 'compute' },
+        { id: 'retrieval', label: 'Semantic Retrieval', kind: 'retrieval' },
         { id: 'nav', label: 'Navigation JSON', kind: 'output' },
       ],
       edges: [
@@ -349,13 +349,13 @@ export const projects: Project[] = [
             {
               label: 'Local corpus',
               nodes: [
-                { id: 'retrieval', label: 'Retrieval', kind: 'compute' },
+                { id: 'retrieval', label: 'Retrieval', kind: 'retrieval' },
                 { id: 'qdrant', label: 'Qdrant', kind: 'store' },
               ],
             },
             {
               label: 'Not in corpus',
-              nodes: [{ id: 'web', label: 'Web Search Fallback', kind: 'compute' }],
+              nodes: [{ id: 'web', label: 'Web Search Fallback', kind: 'retrieval' }],
             },
             {
               label: 'Needs review',

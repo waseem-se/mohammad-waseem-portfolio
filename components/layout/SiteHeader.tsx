@@ -88,111 +88,125 @@ export function SiteHeader({ homeAnchors = true }: { homeAnchors?: boolean }) {
   const href = (anchor: string) => (homeAnchors ? anchor : `/${anchor}`)
 
   return (
-    <header
-      className={cn(
-        'sticky top-0 z-50 border-b transition-colors duration-300',
-        scrolled
-          ? 'border-hairline bg-canvas/85 backdrop-blur-md'
-          : 'border-transparent bg-transparent',
-      )}
-    >
-      <div className="shell flex h-16 items-center justify-between gap-4">
-        <Link
-          href="/"
-          className="group flex min-h-11 min-w-0 items-center gap-2.5 rounded-sm"
-          aria-label={`${profile.name} — home`}
-        >
-          <span
-            aria-hidden
-            className="size-2 shrink-0 rounded-full bg-accent transition-transform duration-300 group-hover:scale-125"
-          />
-          <span className="truncate font-mono text-sm font-medium tracking-tight text-ink">
-            {profile.name}
-          </span>
-        </Link>
-
-        {/* Desktop navigation */}
-        <nav aria-label="Primary" className="hidden lg:block">
-          <ul className="flex items-center gap-1">
-            {nav.map((item) => {
-              const isActive = homeAnchors && active === item.id
-              return (
-                <li key={item.id}>
-                  <a
-                    href={href(item.href)}
-                    aria-current={isActive ? 'true' : undefined}
-                    className={cn(
-                      'relative rounded-md px-3 py-2 text-sm transition-colors',
-                      isActive ? 'text-ink' : 'text-muted hover:text-ink',
-                    )}
-                  >
-                    {item.label}
-                    {isActive ? (
-                      <span
-                        aria-hidden
-                        className="absolute inset-x-3 -bottom-px h-px bg-accent"
-                      />
-                    ) : null}
-                  </a>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
-
-        <div className="flex items-center gap-1">
-          <a
-            href={profile.links.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden rounded-md p-2.5 text-muted transition-colors hover:text-ink sm:inline-flex"
+    <>
+      <header
+        className={cn(
+          'sticky top-0 z-50 border-b transition-colors duration-300',
+          // While the sheet is open the bar must be fully opaque: the panel sits
+          // behind it, and a translucent bar would let the panel show through.
+          // The blur is dropped too — `backdrop-filter` would make this element
+          // the containing block for the fixed panel if it were ever nested here.
+          open
+            ? 'border-hairline bg-canvas'
+            : scrolled
+              ? 'border-hairline bg-canvas/85 backdrop-blur-md'
+              : 'border-transparent bg-transparent',
+        )}
+      >
+        <div className="shell flex h-16 items-center justify-between gap-4">
+          <Link
+            href="/"
+            className="group flex min-h-11 min-w-0 items-center gap-2.5 rounded-sm"
+            aria-label={`${profile.name} — home`}
           >
-            <GitHubIcon className="size-[18px]" />
-            <span className="sr-only">GitHub (opens in a new tab)</span>
-          </a>
-          <a
-            href={profile.links.linkedin}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden rounded-md p-2.5 text-muted transition-colors hover:text-ink sm:inline-flex"
-          >
-            <LinkedInIcon className="size-[18px]" />
-            <span className="sr-only">LinkedIn (opens in a new tab)</span>
-          </a>
-          <a
-            href={profile.links.leetcode}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden rounded-md p-2.5 text-muted transition-colors hover:text-ink sm:inline-flex"
-          >
-            <LeetCodeIcon className="size-[18px]" />
-            <span className="sr-only">LeetCode (opens in a new tab)</span>
-          </a>
+            <span
+              aria-hidden
+              className="size-2 shrink-0 rounded-full bg-accent transition-transform duration-300 group-hover:scale-125"
+            />
+            <span className="truncate font-mono text-sm font-medium tracking-tight text-ink">
+              {profile.name}
+            </span>
+          </Link>
 
-          {/* No `hidden` breakpoint class: the theme switch is reachable at
-              every width, unlike the two social links above. */}
-          <ThemeToggle className="size-11 justify-center rounded-md text-muted hover:text-ink" />
+          {/* Desktop navigation */}
+          <nav aria-label="Primary" className="hidden lg:block">
+            <ul className="flex items-center gap-1">
+              {nav.map((item) => {
+                const isActive = homeAnchors && active === item.id
+                return (
+                  <li key={item.id}>
+                    <a
+                      href={href(item.href)}
+                      aria-current={isActive ? 'true' : undefined}
+                      className={cn(
+                        'relative rounded-md px-3 py-2 text-sm transition-colors',
+                        isActive ? 'text-ink' : 'text-muted hover:text-ink',
+                      )}
+                    >
+                      {item.label}
+                      {isActive ? (
+                        <span
+                          aria-hidden
+                          className="absolute inset-x-3 -bottom-px h-px bg-accent"
+                        />
+                      ) : null}
+                    </a>
+                  </li>
+                )
+              })}
+            </ul>
+          </nav>
 
-          <button
-            ref={toggleRef}
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            aria-controls="mobile-nav"
-            className="inline-flex size-11 items-center justify-center rounded-md text-muted transition-colors hover:text-ink lg:hidden"
-          >
-            {open ? <CloseIcon className="size-5" /> : <MenuIcon className="size-5" />}
-            <span className="sr-only">{open ? 'Close menu' : 'Open menu'}</span>
-          </button>
+          <div className="flex items-center gap-1">
+            <a
+              href={profile.links.github}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden rounded-md p-2.5 text-muted transition-colors hover:text-ink sm:inline-flex"
+            >
+              <GitHubIcon className="size-[18px]" />
+              <span className="sr-only">GitHub (opens in a new tab)</span>
+            </a>
+            <a
+              href={profile.links.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden rounded-md p-2.5 text-muted transition-colors hover:text-ink sm:inline-flex"
+            >
+              <LinkedInIcon className="size-[18px]" />
+              <span className="sr-only">LinkedIn (opens in a new tab)</span>
+            </a>
+            <a
+              href={profile.links.leetcode}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden rounded-md p-2.5 text-muted transition-colors hover:text-ink sm:inline-flex"
+            >
+              <LeetCodeIcon className="size-[18px]" />
+              <span className="sr-only">LeetCode (opens in a new tab)</span>
+            </a>
+
+            {/* No `hidden` breakpoint class: the theme switch is reachable at
+                every width, unlike the two social links above. */}
+            <ThemeToggle className="size-11 justify-center rounded-md text-muted hover:text-ink" />
+
+            <button
+              ref={toggleRef}
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-controls="mobile-nav"
+              className="inline-flex size-11 items-center justify-center rounded-md text-muted transition-colors hover:text-ink lg:hidden"
+            >
+              {open ? <CloseIcon className="size-5" /> : <MenuIcon className="size-5" />}
+              <span className="sr-only">{open ? 'Close menu' : 'Open menu'}</span>
+            </button>
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Mobile sheet */}
+      {/* Mobile sheet.
+          Deliberately a sibling of <header>, not a child. The scrolled header
+          carries `backdrop-filter`, which makes an element the containing block
+          for its fixed-position descendants — nested here, `inset-0 top-16`
+          would resolve against the 64px bar and collapse the panel to zero
+          height, so the menu appeared not to open once the page was scrolled.
+          z-40 keeps it under the z-50 bar, which stays visible with its X. */}
       {open ? (
         <div
           id="mobile-nav"
           ref={panelRef}
-          className="fixed inset-0 top-16 z-50 flex flex-col overflow-y-auto bg-canvas lg:hidden"
+          className="fixed inset-x-0 top-16 bottom-0 z-40 flex flex-col overflow-y-auto bg-canvas lg:hidden"
         >
           <nav aria-label="Primary mobile" className="shell flex-1 py-8">
             <ul className="flex flex-col gap-1">
@@ -265,6 +279,6 @@ export function SiteHeader({ homeAnchors = true }: { homeAnchors?: boolean }) {
           </button>
         </div>
       ) : null}
-    </header>
+    </>
   )
 }
