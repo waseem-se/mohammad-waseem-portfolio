@@ -170,8 +170,12 @@ export function ExperienceTimeline() {
                       className="mt-5"
                     >
                       <ul>
-                        {role.highlights.map((highlight) => (
-                          <HighlightRow key={highlight.body.slice(0, 40)} highlight={highlight} />
+                        {/* Position within the role, not a slice of the prose:
+                            two highlights opening on the same clause would have
+                            collided, and a body is written to be read rather
+                            than to identify anything. */}
+                        {role.highlights.map((highlight, h) => (
+                          <HighlightRow key={`${role.id}-h${h}`} highlight={highlight} />
                         ))}
                       </ul>
                     </div>

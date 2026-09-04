@@ -1,6 +1,9 @@
+import { Fragment } from 'react'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
-import type { ChartTone } from '@/content/types'
+import { kindLabel } from '@/lib/flow'
+import type { ChartTone, FlowKind } from '@/content/types'
+import type { ShapeSegment } from '@/lib/charts'
 
 /**
  * Chart primitives.
@@ -31,12 +34,19 @@ import type { ChartTone } from '@/content/types'
  * Fills and swatches only — never text. `node-guard` measures 4.11:1 and
  * `node-retrieval` 4.48:1 on `raised`, which clears the 3:1 non-text floor a
  * bar needs and misses the 4.5:1 AA floor a label needs.
+ *
+ * Keyed by `FlowKind`, so it covers `llm` — which `ChartTone` excludes because
+ * it resolves to the same value as `compute`. Only SequenceStrip may reach for
+ * that entry, and only because a cell has a second channel (fill versus ring)
+ * to carry the distinction. Anything measured by length must stay on
+ * `ChartTone`: two same-coloured bars have nothing left to tell them apart.
  */
-const toneFill: Record<ChartTone, string> = {
+const kindFill: Record<FlowKind, string> = {
   input: 'bg-node-input',
   compute: 'bg-node-compute',
   retrieval: 'bg-node-retrieval',
   store: 'bg-node-store',
+  llm: 'bg-node-llm',
   guard: 'bg-node-guard',
   output: 'bg-node-output',
   human: 'bg-node-human',
@@ -67,7 +77,6 @@ export function ChartFrame({
   unit,
   caveat,
   legend,
-  source,
   table,
   children,
   className,
@@ -79,8 +88,6 @@ export function ChartFrame({
   /** Required. Every chart here states what its numbers do not mean. */
   caveat: string
   legend?: ChartLegendItem[]
-  /** Provenance, e.g. `content/experience.ts`. */
-  source?: string
   /** Required. Build it with ChartTable. */
   table: ReactNode
   children: ReactNode
@@ -129,10 +136,6 @@ export function ChartFrame({
           >
             {caveat}
           </p>
-
-          {source ? (
-            <p className="mt-3 font-mono text-[0.6875rem] text-dim">Source: {source}</p>
-          ) : null}
         </div>
       </div>
 
@@ -147,7 +150,7 @@ function ChartLegend({ items }: { items: ChartLegendItem[] }) {
     <ul className="flex flex-wrap gap-x-5 gap-y-2.5">
       {items.map((item) => (
         <li key={item.code} className="flex min-w-0 items-center gap-2.5">
-          <span aria-hidden className={cn('size-2.5 shrink-0 rounded-sm', toneFill[item.tone])} />
+          <span aria-hidden className={cn('size-2.5 shrink-0 rounded-sm', kindFill[item.tone])} />
           <span className="min-w-0 text-xs text-muted">
             <span className="font-mono text-[0.6875rem] tracking-[0.08em] text-dim">
               {item.code}
@@ -165,6 +168,20 @@ function ChartLegend({ items }: { items: ChartLegendItem[] }) {
 /* Table fallback                                                             */
 /* -------------------------------------------------------------------------- */
 
+export type ChartTableRow = {
+  /**
+   * Stable row identity, supplied by the caller rather than read off a cell.
+   *
+   * This used to key off the first cell, which is the row header — and two
+   * roles on this site are both titled 'Software Development Engineer 1', at
+   * two different companies. A display label is a thing chosen for the reader;
+   * it is not identity, and nothing stops content from repeating one.
+   */
+  key: string
+  /** First cell becomes the row header. */
+  cells: (string | number)[]
+}
+
 export function ChartTable({
   caption,
   columns,
@@ -172,9 +189,20 @@ export function ChartTable({
 }: {
   caption: string
   columns: string[]
-  /** First cell of each row becomes the row header. */
-  rows: (string | number)[][]
+  rows: ChartTableRow[]
 }) {
+  /* The type forces a key; it cannot force a *unique* one. Same reasoning as
+     roleSeriesById in content/experience.ts: on a statically exported site this
+     runs during `next build`, so a repeat of the duplicate-key bug fails the
+     build rather than reaching a reader as a console warning nobody sees. */
+  const seen = new Set<string>()
+  for (const row of rows) {
+    if (seen.has(row.key)) {
+      throw new Error(`ChartTable "${caption}" has two rows keyed "${row.key}".`)
+    }
+    seen.add(row.key)
+  }
+
   return (
     <table>
       <caption>{caption}</caption>
@@ -189,8 +217,10 @@ export function ChartTable({
       </thead>
       <tbody>
         {rows.map((row) => (
-          <tr key={String(row[0])}>
-            {row.map((cell, i) =>
+          /* Cells key by position: the column count is fixed by `columns`, so
+             an index here is real identity rather than a stand-in for one. */
+          <tr key={row.key}>
+            {row.cells.map((cell, i) =>
               i === 0 ? (
                 <th key={i} scope="row">
                   {cell}
@@ -211,6 +241,11 @@ export function ChartTable({
 /* -------------------------------------------------------------------------- */
 
 export type BarDatum = {
+  /**
+   * Stable identity, for the reason ChartTableRow gives: a label is written for
+   * the reader, and two of them can say the same thing.
+   */
+  key: string
   label: string
   /** The number the length encodes. */
   value: number
@@ -240,7 +275,7 @@ export function BarChart({
     <ul className={cn('divide-y divide-hairline', className)}>
       {data.map((datum) => (
         <li
-          key={datum.label}
+          key={datum.key}
           className="grid grid-cols-1 gap-x-5 gap-y-1.5 py-2.5 first:pt-0 last:pb-0 @2xl:grid-cols-[minmax(0,15rem)_minmax(0,1fr)_auto] @2xl:items-center @2xl:gap-y-0"
         >
           <div className="min-w-0">
@@ -259,8 +294,18 @@ export function BarChart({
             className="relative h-2.5 w-full overflow-hidden rounded-full bg-raised"
           >
             <div
-              className={cn('h-full min-w-[3px] rounded-full', toneFill[datum.tone])}
-              style={{ width: `${(datum.value / max) * 100}%` }}
+              className={cn(
+                'h-full rounded-full',
+                /* A floor so a small non-zero value still reads as a bar — but
+                   never for zero. A bar of length zero is a claim, and the
+                   wrong one; impactData drops unparseable figures for the same
+                   reason rather than charting them at the origin. */
+                datum.value > 0 && 'min-w-[3px]',
+                kindFill[datum.tone],
+              )}
+              /* `max` is caller-supplied, so a degenerate 0 must not become a
+                 NaN width. */
+              style={{ width: max > 0 ? `${(datum.value / max) * 100}%` : '0%' }}
             />
           </div>
 
@@ -336,6 +381,9 @@ export function UnitMatrix({
       </div>
 
       <ul>
+        {/* `label` is identity here, unlike in BarChart and ChartTable: rows come
+            from techRecurrence, which accumulates them in a Map keyed by the
+            technology name, so a duplicate label cannot be constructed. */}
         {rows.map((row) => (
           <li
             key={row.label}
@@ -349,7 +397,7 @@ export function UnitMatrix({
                     key={columns[i]?.id ?? i}
                     className={cn(
                       'size-4 rounded-sm @4xl:size-5',
-                      present ? toneFill[tone] : 'border border-hairline bg-raised',
+                      present ? kindFill[tone] : 'border border-hairline bg-raised',
                     )}
                   />
                 ))}
@@ -375,5 +423,127 @@ export function UnitMatrix({
         ))}
       </ol>
     </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/* Sequence strip                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One cell per stage, in pipeline order, coloured by what the stage does.
+ *
+ * A sparkline of a graph rather than a measurement of one. It replaced a pair of
+ * bars counting nodes and edges, which spanned 4 to 10 across five projects —
+ * almost no variance to draw, and two words of graph-theory vocabulary standing
+ * between the reader and the thing itself. The same argument UnitMatrix makes
+ * about small denominators: with counts this size the honest geometry is a
+ * discrete unit, not a length.
+ *
+ * No axis, and no ChartScale beside it. Every cell is one stage and the total is
+ * direct-labelled by the caller, so a `0 — max` caption would be inventing a
+ * scale the geometry does not have.
+ */
+export function SequenceStrip({
+  segments,
+  className,
+}: {
+  segments: ShapeSegment[]
+  className?: string
+}) {
+  return (
+    /* Decorative. The chart's table carries the sequence as prose — see
+       `sequenceSentence` in ProjectFootprint. */
+    <div aria-hidden className={cn('flex min-w-0 flex-wrap items-center gap-1.5', className)}>
+      {segments.map((segment, i) =>
+        segment.type === 'stage' ? (
+          <Cell key={`${segment.cell.id}-${i}`} kind={segment.cell.kind} />
+        ) : (
+          <Fork key={`fork-${i}`} branches={segment.branches} />
+        ),
+      )}
+    </div>
+  )
+}
+
+function Cell({ kind }: { kind: FlowKind }) {
+  /* `llm` shares `compute`'s hue, so its outline — not its colour — separates
+     them, which is the same thing FlowDiagram does and keeps the distinction
+     available to a reader who cannot use colour at all.
+     Dashed and tinted rather than an empty ring: at this size a hollow cell
+     read as a *gap* in the pipeline, which is the one thing it must not say. */
+  const isModel = kind === 'llm'
+  return (
+    <span
+      className={cn(
+        'size-5 shrink-0 rounded-sm @2xl:size-6',
+        isModel ? 'border-2 border-dashed border-node-llm bg-node-llm/20' : kindFill[kind],
+      )}
+    />
+  )
+}
+
+/**
+ * The point where the pipeline fans out and re-converges.
+ *
+ * Dashed border, matching the branch cards in FlowDiagram — the reader has
+ * likely already seen the full diagram on the project page, and the two should
+ * agree about what a branch looks like. Branch labels are the routing
+ * *conditions*, which is the most interesting thing about the only branching
+ * architecture here, so they render wherever there is room and drop out below
+ * `@lg` rather than forcing the strip to wrap mid-fork.
+ */
+function Fork({ branches }: { branches: { label: string; cells: { id: string; kind: FlowKind }[] }[] }) {
+  return (
+    /* One grid rather than a stack of rows, so the label column lands in the
+       same place on every branch. Stacked rows left the labels ragged, because
+       the branches do not all hold the same number of stages.
+
+       Single column until the labels appear, and not merely a wider one: a
+       hidden label is `display: none`, so it leaves the grid entirely rather
+       than holding its cell. In two columns that let three branches reflow into
+       two rows — the strip drawing a fan-out it does not have, at exactly the
+       widths where the reader has least context to catch it. */
+    <span className="grid min-w-0 grid-cols-1 items-center gap-x-3 gap-y-1 rounded-md border border-dashed border-hairline px-2 py-1.5 @lg:grid-cols-[auto_auto]">
+      {branches.map((branch) => (
+        <Fragment key={branch.label}>
+          <span className="flex min-w-0 items-center gap-1.5">
+            {branch.cells.map((cell) => (
+              <Cell key={cell.id} kind={cell.kind} />
+            ))}
+          </span>
+          <span className="hidden font-mono text-[0.625rem] tracking-[0.08em] whitespace-nowrap text-dim uppercase @lg:inline">
+            {branch.label}
+          </span>
+        </Fragment>
+      ))}
+    </span>
+  )
+}
+
+/**
+ * The key for a set of strips, rendered once beneath them all.
+ *
+ * Strip-local rather than ChartFrame's `legend` prop, following UnitMatrix's own
+ * column key above. That prop is typed `ChartTone`, which cannot express `llm`
+ * at all — and widening it would let a bar chart pick a fill it has no way to
+ * disambiguate. This keeps the exception where the second channel exists.
+ */
+export function SequenceKey({ kinds, className }: { kinds: FlowKind[]; className?: string }) {
+  return (
+    <ul className={cn('flex flex-wrap gap-x-5 gap-y-2', className)}>
+      {kinds.map((kind) => (
+        <li key={kind} className="flex min-w-0 items-center gap-2">
+          <span
+            aria-hidden
+            className={cn(
+              'size-2.5 shrink-0 rounded-sm',
+              kind === 'llm' ? 'border-[1.5px] border-dashed border-node-llm bg-node-llm/20' : kindFill[kind],
+            )}
+          />
+          <span className="text-xs text-muted">{kindLabel[kind]}</span>
+        </li>
+      ))}
+    </ul>
   )
 }

@@ -21,6 +21,12 @@ import type { TimelineBand } from '@/components/chart/TimelineChart'
  * Education is drawn dashed and unfilled rather than in a fifth colour — a
  * difference of form, so it survives greyscale, and it also says the right
  * thing, since a degree is not a rung on the same ladder as the roles above it.
+ *
+ * Every band carries its employer, the way the education band carries its
+ * school. Two roles here are both titled 'Software Development Engineer 1', at
+ * two different companies, so the title is neither identity nor a label a
+ * reader can tell apart — without the employer the only difference between
+ * those two bands is a colour to be decoded against the legend.
  */
 
 const legend: ChartLegendItem[] = roleSeries.map((role) => ({
@@ -53,6 +59,7 @@ export function CareerChart() {
     },
     ...ordered.map((role) => ({
       label: role.title,
+      note: employerOf.get(role.id),
       start: role.start,
       end: role.end,
       tone: roleSeriesFor(role.id).tone,
@@ -66,8 +73,7 @@ export function CareerChart() {
       unit={`Months, ${formatMonth(education.start)} to ${formatMonth(timelineAsOf)}`}
       bodyMax="max-w-6xl"
       legend={legend}
-      source="content/experience.ts"
-      caveat={`Bands are drawn from the month ranges in content/experience.ts. The current role is drawn to ${formatMonth(
+      caveat={`Bands are drawn from the recorded month ranges. The current role is drawn to ${formatMonth(
         timelineAsOf,
       )} — the date these figures were last reviewed, not today's date, so a stale deploy reads as stale rather than quietly growing. The company band in the list below carries the resume's Jun 2022 – Present; the Lead role's Aug 2025 start is inferred so the progression reads without two roles overlapping. Education is drawn dashed because it is not a rung on the same ladder.`}
       table={
@@ -75,28 +81,44 @@ export function CareerChart() {
           caption="Roles and education by date, with duration"
           columns={['Role', 'Employer', 'Start', 'End', 'Duration']}
           rows={[
-            [
-              education.degree,
-              education.school,
-              formatMonth(education.start),
-              formatMonth(education.end),
-              formatDuration(monthSpan(education.start, education.end)),
-            ],
-            ...ordered.map((role) => [
-              role.title,
-              employerOf.get(role.id) ?? '—',
-              formatMonth(role.start),
-              role.end ? formatMonth(role.end) : `Present (as of ${formatMonth(timelineAsOf)})`,
-              formatDuration(monthSpan(role.start, role.end ?? timelineAsOf)),
-            ]),
+            {
+              key: 'education',
+              cells: [
+                education.degree,
+                education.school,
+                formatMonth(education.start),
+                formatMonth(education.end),
+                formatDuration(monthSpan(education.start, education.end)),
+              ],
+            },
+            ...ordered.map((role) => ({
+              /* The role id, never the title — two roles share one. */
+              key: role.id,
+              cells: [
+                role.title,
+                employerOf.get(role.id) ?? '—',
+                formatMonth(role.start),
+                role.end ? formatMonth(role.end) : `Present (as of ${formatMonth(timelineAsOf)})`,
+                formatDuration(monthSpan(role.start, role.end ?? timelineAsOf)),
+              ],
+            })),
           ]}
         />
       }
     >
       <TimelineChart bands={bands} asOf={timelineAsOf} />
+      {/* The employer is named here for the same reason it is on the band: two
+          of these roles share a title, and without it the sentence reads as the
+          same role stated twice. */}
       <p className="sr-only">
         {ordered
-          .map((role) => `${role.title}, ${formatRange(role.start, role.end)}`)
+          .map(
+            (role) =>
+              `${role.title}, ${employerOf.get(role.id) ?? 'employer not recorded'}, ${formatRange(
+                role.start,
+                role.end,
+              )}`,
+          )
           .join('. ')}
       </p>
     </ChartFrame>

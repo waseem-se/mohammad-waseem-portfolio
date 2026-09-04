@@ -37,6 +37,7 @@ export function ImpactChart() {
     .filter((datum) => datum.kind === 'reduction')
     .sort((a, b) => b.value - a.value)
     .map((datum) => ({
+      key: datum.id,
       label: datum.label,
       value: datum.value,
       display: datum.display,
@@ -52,18 +53,20 @@ export function ImpactChart() {
       unit="Percent reduction against the prior baseline"
       bodyMax="max-w-4xl"
       legend={legend}
-      source="content/experience.ts"
       caveat="Each figure is a separate measurement of a separate system, taken at a different time. The bars compare only within the group above — a 30% fall in token usage and a 70% fall in processing time are both reductions, but of unrelated quantities. The two accuracy figures below carry no bar: 95% is the accuracy of generated migrations and 18% is an improvement over a prior model, so neither is a reduction and neither belongs on that scale."
       table={
         <ChartTable
           caption="Measured outcomes by role, with what each figure measures"
           columns={['Figure', 'Value', 'Kind', 'Role']}
-          rows={data.map((datum) => [
-            datum.label,
-            datum.display,
-            datum.kind === 'reduction' ? 'Reduction against baseline' : 'Accuracy level',
-            roleSeriesFor(datum.roleId).label,
-          ])}
+          rows={data.map((datum) => ({
+            key: datum.id,
+            cells: [
+              datum.label,
+              datum.display,
+              datum.kind === 'reduction' ? 'Reduction against baseline' : 'Accuracy level',
+              roleSeriesFor(datum.roleId).label,
+            ],
+          }))}
         />
       }
     >
@@ -74,7 +77,7 @@ export function ImpactChart() {
         <h5 className="mono-label mb-5">Accuracy figures — not on the scale above</h5>
         <dl className="grid grid-cols-2 gap-6 sm:gap-8">
           {accuracies.map((datum) => (
-            <div key={datum.label}>
+            <div key={datum.id}>
               <dt className="sr-only">{datum.label}</dt>
               <dd>
                 <span className="block font-mono text-2xl font-semibold tracking-tight text-accent tabular-nums">

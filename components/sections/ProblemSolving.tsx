@@ -70,13 +70,15 @@ export function ProblemSolving() {
             title="Problems solved by language"
             unit="Problems, as LeetCode reports them per language"
             bodyMax="max-w-3xl"
-            source="content/leetcode.ts"
             caveat="A problem solved in two languages is counted under both. These bars do not sum to a number of problems, and no total is shown because none would be true."
             table={
               <ChartTable
                 caption="Problems solved by language"
                 columns={['Language', 'Problems']}
-                rows={leetcode.languages.map((language) => [language.name, language.count])}
+                rows={leetcode.languages.map((language) => ({
+                  key: language.name,
+                  cells: [language.name, language.count],
+                }))}
               />
             }
           >
@@ -88,6 +90,7 @@ export function ProblemSolving() {
             <BarChart
               max={languageMax}
               data={leetcode.languages.map((language) => ({
+                key: language.name,
                 label: language.name,
                 value: language.count,
                 display: String(language.count),
@@ -101,14 +104,19 @@ export function ProblemSolving() {
             title="Problems solved by topic"
             unit="Problems, on one scale shared across all nine topics"
             bodyMax="max-w-6xl"
-            source="content/leetcode.ts"
             caveat="LeetCode tags one problem with several topics, so a single problem appears under each topic it matches. These bars do not sum to a number of problems. All three tiers share one scale, so bar lengths are comparable across tiers as well as within them."
             table={
               <ChartTable
                 caption="Problems solved by topic, grouped by tier"
                 columns={['Topic', 'Tier', 'Problems']}
                 rows={leetcode.topicGroups.flatMap((group) =>
-                  group.topics.map((topic) => [topic.name, group.name, topic.count]),
+                  group.topics.map((topic) => ({
+                    /* Tier-qualified. No topic name repeats across the three
+                       tiers today, and nothing in the content type says one
+                       cannot. */
+                    key: `${group.name}:${topic.name}`,
+                    cells: [topic.name, group.name, topic.count],
+                  })),
                 )}
               />
             }
@@ -122,6 +130,7 @@ export function ProblemSolving() {
                   <BarChart
                     max={topicMax}
                     data={group.topics.map((topic) => ({
+                      key: topic.name,
                       label: topic.name,
                       value: topic.count,
                       display: String(topic.count),

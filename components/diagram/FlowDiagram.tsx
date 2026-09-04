@@ -1,4 +1,5 @@
 import { cn } from '@/lib/cn'
+import { kindLabel } from '@/lib/flow'
 import type { FlowGraph, FlowKind, FlowNode } from '@/content/types'
 
 /**
@@ -29,17 +30,6 @@ const kindStyles: Record<FlowKind, { dot: string; border: string }> = {
   guard: { dot: 'bg-node-guard', border: 'border-node-guard-line' },
   output: { dot: 'bg-node-output', border: 'border-node-output-line' },
   human: { dot: 'bg-node-human', border: 'border-node-human-line' },
-}
-
-const kindLabel: Record<FlowKind, string> = {
-  input: 'input',
-  compute: 'process',
-  retrieval: 'retrieval',
-  store: 'data store',
-  llm: 'model',
-  guard: 'validation',
-  output: 'output',
-  human: 'human review',
 }
 
 function Node({ node, compact }: { node: FlowNode; compact?: boolean }) {
