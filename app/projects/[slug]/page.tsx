@@ -98,11 +98,11 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
                 {project.personal ? <Chip>Personal Project</Chip> : null}
               </div>
 
-              <h1 className="mt-6 max-w-4xl text-[length:var(--text-section)] leading-[1.08] font-semibold tracking-[-0.02em]">
+              <h1 className="mt-6 measure-xl text-[length:var(--text-section)] leading-[1.08] font-semibold">
                 {project.name}
               </h1>
 
-              <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted">
+              <p className="mt-6 measure text-lg leading-relaxed text-muted">
                 {project.summary}
               </p>
 
@@ -133,7 +133,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
                       {project.outcomes.map((outcome) => (
                         <li
                           key={outcome}
-                          className="flex max-w-2xl gap-3 leading-relaxed text-ink"
+                          className="flex measure gap-3 leading-relaxed text-ink"
                         >
                           <span
                             aria-hidden
@@ -151,7 +151,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
 
           <div className="shell">
             <DetailSection index="01" title="Problem">
-              <p className="max-w-3xl text-lg leading-relaxed text-ink">{project.problem}</p>
+              <p className="measure-lg text-lg leading-relaxed text-ink">{project.problem}</p>
             </DetailSection>
 
             <DetailSection index="02" title="Architecture">
@@ -173,7 +173,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
                 </div>
                 <div className="lg:pt-2">
                   <h3 className="mono-label mb-4">Solution</h3>
-                  <p className="text-base leading-relaxed text-muted">{project.solution}</p>
+                  <p className="measure text-base leading-relaxed text-muted">{project.solution}</p>
                 </div>
               </div>
             </DetailSection>
@@ -192,14 +192,14 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
                       </span>
                       <h3 className="leading-snug font-medium text-ink">{decision.heading}</h3>
                     </div>
-                    <p className="text-sm leading-relaxed text-muted">{decision.body}</p>
+                    <p className="measure text-sm leading-relaxed text-muted">{decision.body}</p>
                   </li>
                 ))}
               </ul>
             </DetailSection>
 
             <DetailSection index="04" title="Challenges">
-              <ul className="max-w-3xl divide-y divide-hairline">
+              <ul className="measure-lg divide-y divide-hairline">
                 {project.challenges.map((challenge) => (
                   <li key={challenge.heading} className="py-6 first:pt-0 last:pb-0">
                     <h3 className="mb-2 font-medium text-ink">{challenge.heading}</h3>
@@ -211,7 +211,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
 
             {project.details && project.details.length > 0 ? (
               <DetailSection index="05" title="Technical Detail">
-                <div className="max-w-3xl space-y-3">
+                <div className="measure-lg space-y-3">
                   {project.details.map((detail) => (
                     <details
                       key={detail.heading}
@@ -253,7 +253,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
             </DetailSection>
 
             <DetailSection index={project.details?.length ? '07' : '06'} title="Key Takeaway">
-              <p className="max-w-3xl border-l-2 border-accent/50 pl-6 text-lg leading-relaxed text-ink">
+              <p className="measure-lg border-l-2 border-accent/50 pl-6 text-lg leading-relaxed text-ink">
                 {project.takeaway}
               </p>
             </DetailSection>

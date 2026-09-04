@@ -14,9 +14,13 @@ export function Contact() {
     <Section id="contact">
       <SectionHeader id="contact-title" index="08" eyebrow="Contact" title={contact.title} />
 
-      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16">
+      {/* Explicit tracks past `2xl` rather than proportional ones: the right
+          column is a self-contained card that should not grow with the field.
+          `justify-between` then pushes the two fixed tracks to the edges, which
+          is the anchored-columns idiom a full-bleed layout needs. */}
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-16 2xl:grid-cols-[minmax(0,42rem)_minmax(0,32rem)] 2xl:justify-between">
         <div>
-          <p className="text-base text-muted">{contact.intro}</p>
+          <p className="measure text-base text-muted">{contact.intro}</p>
           <ul className="mt-6 grid gap-x-8 gap-y-3 sm:grid-cols-2">
             {contact.interests.map((interest) => (
               <li key={interest} className="flex items-center gap-3 text-sm text-ink">

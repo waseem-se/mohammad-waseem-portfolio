@@ -1,6 +1,7 @@
 import { leetcode } from '@/content/leetcode'
 import { profile } from '@/content/profile'
 import { ActionLink } from '@/components/ui/primitives'
+import { BarChart, ChartFrame, ChartScale, ChartTable } from '@/components/chart/Chart'
 import { LeetCodeIcon, ArrowRightIcon } from '@/components/ui/icons'
 import { Reveal } from '@/components/ui/Reveal'
 
@@ -12,8 +13,28 @@ import { Reveal } from '@/components/ui/Reveal'
  * stays intact and the numbered index sequence is untouched.
  *
  * Every figure comes from `content/leetcode.ts`. Nothing here is summed or
- * derived; see that file for why a total would misrepresent the profile.
+ * derived; see that file for why a total would misrepresent the profile. That
+ * constraint is what rules out every chart form a reader might expect here: no
+ * pie, no donut, no stacked bar, no share-of-total, no headline count. Two
+ * independent sets of bars, each on its own stated scale, is the only honest
+ * shape for numbers that double-count by design.
  */
+
+/**
+ * One scale across all nine topics, computed once here rather than per tier.
+ *
+ * This is the single most important line in the file. Scaling each tier to its
+ * own maximum would draw "Dynamic Programming, 16" exactly as long as "Array,
+ * 131" — three charts that each look full and say nothing about each other,
+ * which is precisely the false comparison the rest of this page works to avoid.
+ * The Advanced tier looking sparse is the honest reading.
+ */
+const topicMax = Math.max(
+  ...leetcode.topicGroups.flatMap((group) => group.topics.map((topic) => topic.count)),
+)
+
+const languageMax = Math.max(...leetcode.languages.map((language) => language.count))
+
 export function ProblemSolving() {
   return (
     <Reveal className="mt-12">
@@ -44,40 +65,74 @@ export function ProblemSolving() {
           </ActionLink>
         </div>
 
-        <div className="mt-8 border-t border-hairline pt-8">
-          <p className="mono-label mb-5">Problems solved by language</p>
-          <dl className="grid grid-cols-2 gap-5 sm:grid-cols-3">
-            {leetcode.languages.map((language) => (
-              <div key={language.name}>
-                <dt className="text-xs leading-snug text-dim">{language.name}</dt>
-                <dd className="mt-1.5 font-mono text-2xl font-semibold tracking-tight text-ink tabular-nums">
-                  {language.count}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+        <div className="mt-8 space-y-5 border-t border-hairline pt-8">
+          <ChartFrame
+            title="Problems solved by language"
+            unit="Problems, as LeetCode reports them per language"
+            bodyMax="max-w-3xl"
+            source="content/leetcode.ts"
+            caveat="A problem solved in two languages is counted under both. These bars do not sum to a number of problems, and no total is shown because none would be true."
+            table={
+              <ChartTable
+                caption="Problems solved by language"
+                columns={['Language', 'Problems']}
+                rows={leetcode.languages.map((language) => [language.name, language.count])}
+              />
+            }
+          >
+            {/* One series, so colour would encode nothing — all three bars take
+                the accent. The 65:1 range between C++ and MS SQL Server is real
+                and stays linear: `min-w-[3px]` keeps the smallest bar visible
+                and the count sits beside it either way. A log scale would make
+                3 look like a third of 197, which is the lie. */}
+            <BarChart
+              max={languageMax}
+              data={leetcode.languages.map((language) => ({
+                label: language.name,
+                value: language.count,
+                display: String(language.count),
+                tone: 'compute' as const,
+              }))}
+            />
+            <ChartScale max={languageMax} unit="problems" />
+          </ChartFrame>
 
-        <div className="mt-8 border-t border-hairline pt-8">
-          <p className="mono-label mb-5">Problems solved by topic</p>
-          <div className="grid gap-6 sm:grid-cols-3 sm:gap-8">
-            {leetcode.topicGroups.map((group) => (
-              <div key={group.name}>
-                <h4 className="mb-3 text-sm font-semibold text-ink">{group.name}</h4>
-                <dl>
-                  {group.topics.map((topic) => (
-                    <div
-                      key={topic.name}
-                      className="flex items-baseline justify-between gap-3 border-b border-hairline py-2 last:border-b-0"
-                    >
-                      <dt className="text-sm leading-snug text-muted">{topic.name}</dt>
-                      <dd className="font-mono text-sm text-ink tabular-nums">{topic.count}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            ))}
-          </div>
+          <ChartFrame
+            title="Problems solved by topic"
+            unit="Problems, on one scale shared across all nine topics"
+            bodyMax="max-w-6xl"
+            source="content/leetcode.ts"
+            caveat="LeetCode tags one problem with several topics, so a single problem appears under each topic it matches. These bars do not sum to a number of problems. All three tiers share one scale, so bar lengths are comparable across tiers as well as within them."
+            table={
+              <ChartTable
+                caption="Problems solved by topic, grouped by tier"
+                columns={['Topic', 'Tier', 'Problems']}
+                rows={leetcode.topicGroups.flatMap((group) =>
+                  group.topics.map((topic) => [topic.name, group.name, topic.count]),
+                )}
+              />
+            }
+          >
+            <div className="grid gap-6 sm:grid-cols-3 sm:gap-8">
+              {leetcode.topicGroups.map((group) => (
+                /* Each column is its own container: the bar rows switch to their
+                   wide layout on the width they actually get, not on the frame's. */
+                <div key={group.name} className="@container min-w-0">
+                  <h5 className="mb-3 text-sm font-semibold text-ink">{group.name}</h5>
+                  <BarChart
+                    max={topicMax}
+                    data={group.topics.map((topic) => ({
+                      label: topic.name,
+                      value: topic.count,
+                      display: String(topic.count),
+                      tone: 'compute' as const,
+                    }))}
+                  />
+                </div>
+              ))}
+            </div>
+            <ChartScale max={topicMax} unit="problems, shared across all nine topics" />
+          </ChartFrame>
         </div>
 
         <p className="mt-8 text-xs leading-relaxed text-dim">

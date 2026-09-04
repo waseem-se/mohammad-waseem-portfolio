@@ -32,11 +32,11 @@ export function SectionHeader({
       </div>
       <h2
         id={id}
-        className="max-w-3xl text-[length:var(--text-section)] leading-[1.1] font-semibold"
+        className="measure-lg text-[length:var(--text-section)] leading-[1.1] font-semibold"
       >
         {title}
       </h2>
-      {lede ? <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted">{lede}</p> : null}
+      {lede ? <p className="mt-5 measure text-lg leading-relaxed text-muted">{lede}</p> : null}
     </header>
   )
 }
