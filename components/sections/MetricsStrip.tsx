@@ -50,7 +50,7 @@ function MetricItem({ value, label, animate }: { value: string; label: string; a
   const display = useCountUp(value, animate)
 
   return (
-    <div className="bg-surface px-4 py-5 last:col-span-2 sm:px-5 md:py-6 xl:last:col-span-1">
+    <div className="bg-surface px-4 py-5 last:col-span-2 sm:px-5 md:py-6 xl:last:col-span-1 2xl:px-8">
       {/* The literal value stays available to assistive tech regardless of the
           animated digits, which change many times a second. */}
       <div

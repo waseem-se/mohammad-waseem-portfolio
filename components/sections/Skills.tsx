@@ -13,7 +13,13 @@ export function Skills() {
         lede="Grouped by where each sits in a system. No proficiency percentages — the projects above are the evidence."
       />
 
-      <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Five across waits for `3xl` (1920), not `2xl`. At 1536 five columns
+          leave a card 217px of content, and TechTag is `whitespace-nowrap` —
+          "Multi-Agent Orchestration" measures ~202px at that size. Fifteen
+          pixels of slack is not a margin; one longer skill string in
+          content/skills.ts and the card overflows. At 1920 the same cell is
+          288px. */}
+      <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 3xl:grid-cols-5">
         {skillGroups.map((group, i) => (
           <Reveal as="li" key={group.name} delay={i * 60}>
             <div className="h-full rounded-xl border border-hairline bg-surface p-6">

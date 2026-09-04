@@ -3,6 +3,7 @@ import { projects } from '@/content/projects'
 import { FlowPreview } from '@/components/diagram/FlowDiagram'
 import { Chip, Section, SectionHeader, TechTag } from '@/components/ui/primitives'
 import { Reveal } from '@/components/ui/Reveal'
+import { ProjectFootprint } from '@/components/sections/ProjectFootprint'
 import { ArrowRightIcon } from '@/components/ui/icons'
 
 export function Projects() {
@@ -20,7 +21,7 @@ export function Projects() {
         {projects.map((project, i) => (
           <Reveal as="li" key={project.slug} delay={i * 60}>
             <article className="group relative rounded-xl border border-hairline bg-surface transition-colors duration-300 hover:border-hairline-strong">
-              <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-12">
+              <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-12 2xl:gap-16">
                 <div className="min-w-0">
                   <div className="mb-5 flex flex-wrap items-center gap-2">
                     <Chip tone={project.personal ? 'default' : 'accent'}>{project.category}</Chip>
@@ -40,7 +41,7 @@ export function Projects() {
                     </Link>
                   </h3>
 
-                  <p className="mt-4 max-w-2xl text-sm leading-relaxed text-muted md:text-base">
+                  <p className="mt-4 measure text-sm leading-relaxed text-muted md:text-base">
                     {project.summary}
                   </p>
 
@@ -64,7 +65,7 @@ export function Projects() {
 
                   {/* Qualitative results, for work the resume does not quantify. */}
                   {project.outcomes.length > 0 ? (
-                    <ul className="mt-6 space-y-2">
+                    <ul className="measure mt-6 space-y-2">
                       {project.outcomes.map((outcome) => (
                         <li key={outcome} className="flex gap-3 text-sm leading-snug text-muted">
                           <span
@@ -106,6 +107,8 @@ export function Projects() {
           </Reveal>
         ))}
       </ul>
+
+      <ProjectFootprint />
     </Section>
   )
 }

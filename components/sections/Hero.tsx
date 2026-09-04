@@ -18,8 +18,16 @@ export function Hero() {
         {/* The diagram track opens narrow at `lg` and reaches its 500px design
             width at `xl`. At exactly 1024px a 500px track leaves the headline a
             404px measure while the display clamp still resolves to ~64px,
-            which wraps it to eight lines and hyphen-breaks "production-grade". */}
-        <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] lg:gap-14 xl:grid-cols-[minmax(0,1fr)_minmax(0,500px)]">
+            which wraps it to eight lines and hyphen-breaks "production-grade".
+            That lower bound is unchanged and still binding.
+
+            Past `2xl` the shell is the viewport, so the track grows with it
+            rather than leaving a 500px figure marooned beside a 1200px copy
+            column. 560 is a size, not a redraw: the SVG is `w-full` and scales
+            uniformly — see HeroPipeline. The copy's own measure is capped
+            separately, so this `1fr` is deliberately wider than the text it
+            holds. */}
+        <div className="grid items-center gap-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] lg:gap-14 xl:grid-cols-[minmax(0,1fr)_minmax(0,500px)] 2xl:grid-cols-[minmax(0,1fr)_minmax(0,560px)] 2xl:gap-20">
           {/* Copy */}
           <div>
             <p className="mono-label mb-6 flex items-center gap-3">
@@ -43,13 +51,21 @@ export function Hero() {
             </p>
 
             {/* One emphasis break, not three: the claim at full ink weight, the
-                journey it describes stepped back in muted grey. */}
-            <p className="mt-7 max-w-2xl text-[length:var(--text-display)] leading-[1.06] font-semibold tracking-[-0.03em]">
+                journey it describes stepped back in muted grey.
+
+                Carries `font-display` explicitly because this is a <p>: the real
+                <h1> above is sr-only, so the h1-h4 base rule in globals.css does
+                not reach the line that actually renders. Tracking and leading are
+                Space Grotesk's, not Inter's — at the clamp's 68px ceiling
+                -0.03em is -2.04px a pair, which this face does not have the
+                sidebearings to give up, and 1.06 collides on the "g" of
+                "Building". */}
+            <p className="font-display mt-7 measure 2xl:measure-lg text-[length:var(--text-display)] leading-[1.08] font-semibold tracking-[-0.02em]">
               Building production-grade AI systems{' '}
               <span className="text-muted">from LLM prototypes to reliable products.</span>
             </p>
 
-            <p className="mt-7 max-w-xl text-base leading-relaxed text-muted md:text-lg">
+            <p className="mt-7 max-w-xl 2xl:measure text-base leading-relaxed text-muted md:text-lg">
               {profile.supporting}
             </p>
 

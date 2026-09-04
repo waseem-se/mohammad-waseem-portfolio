@@ -8,7 +8,7 @@ Static site: Next.js App Router, TypeScript, Tailwind CSS v4, exported to plain 
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
+npm start          # http://localhost:3000
 npm run build      # static export -> out/
 npm run lint
 npm run typecheck
@@ -101,6 +101,46 @@ renderer splices such a node into the sequence, which is how the narrow-screen h
 drew `Retrieval -> Vector DB -> LLM` while the SVG drew Vector DB as a side branch. The
 generated prose description follows the same split, so the two never disagree.
 
+**The page is the viewport; only text is capped.** `.shell` in
+[globals.css](app/globals.css) is a gutter, not a page width — it carries no `max-width`, so
+the header, footer, section rules, card grids, metrics strip and diagrams all span the
+display, and the side padding grows in steps from 1.25rem to 5rem past 1920px. What stops
+growing is running text: `measure` (42rem), `measure-lg` (48rem) and `measure-xl` (56rem) cap
+paragraphs and headings, and those three values live only in that file. They are the same
+numbers that were previously spelled `max-w-2xl` / `max-w-3xl` / `max-w-4xl` at each call
+site, promoted to names so "how wide may a line of text be" is answered once. Charts obey a
+measure too, through `ChartFrame`'s `bodyMax` — past a point extra width stops being
+resolution and starts being a bar you cannot scan back to its own label.
+
+A consequence worth knowing before adding a section: a grid that was safe when the content
+stopped at 1152px may not be. Skills goes five across only at `3xl` (1920) because at 1536 a
+five-column card leaves 217px of content and `TechTag` is `whitespace-nowrap`; Philosophy
+goes four across at `2xl` only because `principles.length === 4`, and a ragged trailing cell
+would show through the `gap-px` seams as a tinted block. The project page's Engineering
+Decisions grid deliberately stays two across for that reason — its item count varies 4/3/4.
+
+**Charts are data too, and they carry a contract.** Every figure charted is already on the
+page in prose; the charts derive from `content/` rather than restating it, so a content edit
+moves them. Bars are CSS, not SVG: SVG `<text>` does not wrap and a `viewBox` scales text
+with the box, which across this site's range of container widths would mean 5px labels on a
+phone and 40px ones on a monitor. [Chart.tsx](components/chart/Chart.tsx) centralises the
+part that must never be forgotten rather than the geometry — `caveat` and `table` are
+*required* props on `ChartFrame`, so no chart can ship without stating what its numbers do
+not mean and without a real `<table>` for anyone who cannot see it. Scales are explicit
+props, never derived inside a group: deriving per group is how two charts drawn side by side
+silently end up on two different axes, which is why all three LeetCode tiers are handed one
+`topicMax` computed across all nine topics.
+
+Two figures the charts deliberately refuse to draw: the LeetCode counts are never summed
+(LeetCode counts a problem once per language and once per topic, so any total overstates),
+and the two accuracy percentages carry no bar at all, because a level and a reduction on one
+0-100% axis invites a comparison that means nothing.
+
+**`node-*` tokens are fills and legend swatches only, never text.** `--node-guard` measures
+4.11:1 and `--node-retrieval` 4.48:1 on `raised` — past the 3:1 non-text floor a bar fill
+needs, short of the 4.5:1 AA floor a label needs. All chart text wears `ink` / `muted` /
+`dim` / `accent`, with a coloured swatch beside it carrying the identity.
+
 **Node kinds carry meaning, and not through colour alone.** `retrieval` is its own kind
 rather than a flavour of `compute`: with them merged, routing, orchestration, and retrieval
 all rendered in one indigo, flattening the distinction the Principles section is built on.
@@ -108,11 +148,20 @@ all rendered in one indigo, flattening the distinction the Principles section is
 in both renderers — which states that the model stage is the probabilistic one and keeps
 the difference legible without relying on hue.
 
-**Client JavaScript is opt-in.** Everything is a React Server Component except seven files
-that need state: the header (scroll-spy), the mobile nav sheet, the metrics count-up, the
-experience timeline, the architecture tablist, the copy-email button, and the theme toggle.
-There is no animation library and no icon library — the icons in
-[icons.tsx](components/ui/icons.tsx) are hand-authored SVG.
+**Client JavaScript is opt-in.** Everything is a React Server Component except eight files.
+Seven need state: the header (scroll-spy), the mobile nav sheet, the metrics count-up, the
+[experience disclosures](components/sections/ExperienceTimeline.tsx), the architecture
+tablist, the copy-email button, and the theme toggle. The eighth,
+[PointerHalo.tsx](components/ui/PointerHalo.tsx), is the one exception to that rule: it holds
+no state anything depends on and is pure decoration. It earns its place by costing nothing
+when unwanted — it renders `null` on the server, on the first client render, on any coarse
+pointer, and under `prefers-reduced-motion`, and nothing on the page is positioned relative
+to it. The charts add no client components at all; the experience section was split so its
+shell and its two charts could stay on the server.
+
+There is no animation library, no icon library and no chart library — the icons in
+[icons.tsx](components/ui/icons.tsx) are hand-authored SVG and the bars in
+[components/chart/](components/chart/) are `div`s with a width.
 
 **The hero pipeline** ([HeroPipeline.tsx](components/diagram/HeroPipeline.tsx)) is
 server-rendered inline SVG. A packet traverses the spine on a CSS `stroke-dashoffset`
@@ -126,7 +175,9 @@ depend on the packet, which reduced motion removes and a screenshot never catche
 silently paint body copy the same colour as the page. The background token is
 `--color-canvas` for this reason. The same rule is why the diagram tokens are `node-`
 prefixed: bare `--color-input` / `--color-output` would produce `bg-input` and `text-output`,
-generic enough to be reached for by accident.
+generic enough to be reached for by accident. `--font-display` was checked against the same
+rule and is clear: `font-display` is a `@font-face` *descriptor*, never a property, and
+Tailwind ships no built-in utility by that name.
 
 ## Theming
 
@@ -156,24 +207,39 @@ OS preference -> light.
 - **Two things are deliberately not theme-aware.** The OG card
   ([opengraph-image.tsx](app/opengraph-image.tsx)) is a build-time PNG rendered inside other
   platforms' chrome, where staying dark keeps its edge against light feeds. The favicon
-  ([icon.svg](app/icon.svg)) follows browser chrome, not the site.
+  ([icon.svg](app/icon.svg)) follows browser chrome, not the site. The OG card is not
+  font-aware either — it stays on system fonts so the build never depends on the network,
+  which means its headline is the one place the site's display face does not reach.
 
 ## Accessibility
 
 Verified rather than assumed:
 
 - WCAG AA contrast on all three text tokens, in both themes, against both the page and the
-  raised surface. The binding pair either way is `dim` on `raised`: **5.22:1 light, 5.07:1
-  dark**. Every other pair sits above it — on `raised`, `ink` measures 14.88 / 14.84 and
-  `muted` 6.18 / 6.22. Diagram node colours clear the 3:1 non-text floor on `raised` in both.
+  raised surface. On `raised` the binding pair either way is `dim`: **5.22:1 light, 5.07:1
+  dark**; `ink` measures 14.88 / 14.84 and `muted` 6.18 / 6.22. Diagram node colours clear
+  the 3:1 non-text floor on `raised` in both.
+- The pointer halo cannot reach `raised`. It paints at `z-index: -1`, behind every opaque
+  `surface` and `raised` panel, so the guardrail against stacking `accent-soft` on `raised`
+  is not merely respected but unreachable. The only text it sits behind is text on the bare
+  canvas, where `dim` falls from 6.24 to **5.21:1 light** and 5.85 to **5.00:1 dark** at the
+  halo's brightest point — its inner stop is `accent-soft` verbatim, so at full strength it
+  tints no harder than a chip. 5.00 is the new site-wide binding pair.
 - Full keyboard operation — skip link, visible focus rings, an ARIA tablist for the
   architecture stack (arrows / Home / End with wrapping), and a mobile nav sheet that traps
   focus, closes on Escape, and restores focus to its trigger.
-- `prefers-reduced-motion` removes the packet, the stage flashes, and the scroll reveals
-  outright, and the metrics render their real values rather than a frozen counter. The
+- `prefers-reduced-motion` removes the packet, the stage flashes, the scroll reveals and the
+  pointer halo outright, and the metrics render their real values rather than a frozen
+  counter. Nothing in a chart animates at all: bar widths are inline `style` attributes, so
+  they paint at full length from the stylesheet alone. The
   pipeline still reads as directed: the chevrons are static, so nothing about the flow is
   carried by motion alone.
-- No diagram distinction rests on colour alone — `llm` is dashed and hollow-dotted as well
-  as tinted, and every node carries an `sr-only` kind label.
-- No horizontal overflow at 320 / 375 / 768 / 1024 / 1440.
+- No diagram or chart distinction rests on colour alone. `llm` is dashed and hollow-dotted as
+  well as tinted, and every node carries an `sr-only` kind label. Every chart series repeats
+  its identity as a monospace code on each mark and in the legend; education on the career
+  timeline is dashed and unfilled rather than a fifth hue; the technology matrix encodes
+  presence as filled-versus-empty and states "3 of 5" as text. Each chart also carries an
+  `sr-only` `<table>` with the same figures.
+- No horizontal overflow at 320 / 375 / 768 / 1024 / 1440 / 1536 / 1920 / 2560, on the home
+  page and on a project page, in both themes.
 - Content stays visible without JavaScript (a `<noscript>` rule restores the reveals).

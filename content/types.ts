@@ -24,6 +24,22 @@ export type FlowKind =
   | 'output'
   | 'human'
 
+/**
+ * Series colour for a chart, drawn from the diagram palette so charts and
+ * diagrams cannot drift apart and every fill is already contrast-checked
+ * against `raised`.
+ *
+ * `llm` is excluded deliberately: it resolves to the same value as `compute`,
+ * so offering it would let two series in one chart pick the same colour. The
+ * diagram renderers can afford the collision because they also draw `llm` with
+ * a dashed outline; a flat bar has no second channel to fall back on.
+ *
+ * These are fills and legend swatches only, never text. `node-guard` measures
+ * 4.11:1 and `node-retrieval` 4.48:1 on `raised` — past the 3:1 non-text floor
+ * a bar needs, short of the 4.5:1 AA floor a label needs.
+ */
+export type ChartTone = Exclude<FlowKind, 'llm'>
+
 export type FlowNode = {
   id: string
   label: string
@@ -79,11 +95,17 @@ export type Metric = {
 }
 
 export type Role = {
+  /**
+   * Stable key, independent of the title string — two roles share the title
+   * "Software Development Engineer 1". Also the series key for the charts.
+   */
+  id: string
   title: string
-  period: string
+  /** Inclusive first month, ISO `YYYY-MM`. */
+  start: string
+  /** Inclusive last month, ISO `YYYY-MM`; `null` means still held. */
+  end: string | null
   location?: string
-  /** Marks the role currently held. */
-  current?: boolean
   highlights: Highlight[]
 }
 
@@ -92,8 +114,30 @@ export type Highlight = {
   name?: string
   body: string
   /** Rendered as an emphasised figure beside the bullet. */
-  impact?: { value: string; label: string }
+  impact?: { value: string; label: string; kind: ImpactKind }
   tech?: string[]
+}
+
+/**
+ * What a percentage actually measures.
+ *
+ * Only `reduction` figures may share a bar axis. An accuracy figure is a *level*
+ * or a *change in* a level, not a fall against a baseline; drawing it beside a
+ * reduction on one 0-100% axis makes "95% accurate" read as a larger achievement
+ * than "75% fewer unsafe outputs", which it is not — they are not the same
+ * quantity. components/sections/ImpactChart.tsx splits on this rather than
+ * mixing them and apologising in a caption.
+ */
+export type ImpactKind = 'reduction' | 'accuracy'
+
+export type Education = {
+  school: string
+  degree: string
+  /** Inclusive first month, ISO `YYYY-MM`. */
+  start: string
+  /** Inclusive last month, ISO `YYYY-MM`. */
+  end: string
+  location: string
 }
 
 export type Company = {

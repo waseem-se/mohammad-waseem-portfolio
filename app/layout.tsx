@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, JetBrains_Mono } from 'next/font/google'
+import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
 import { seo, profile } from '@/content/profile'
+import { PointerHalo } from '@/components/ui/PointerHalo'
 import './globals.css'
 
 /* Self-hosted at build time by next/font — no runtime request to Google. */
@@ -14,6 +15,27 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-mono-jb',
+})
+
+/* Headings only; body copy stays Inter.
+
+   The variable is named for the family, not for the role it plays. The role
+   name --font-display belongs to the @theme token in globals.css, and that
+   token lives in :root — which *is* <html>, the same element next/font puts
+   this class on. Naming both ends --font-display would make the token
+   `var(--font-display)` reference itself: a custom-property cycle, invalid at
+   computed-value time, which resolves headings to the browser default serif
+   rather than falling back to Inter. Same two-name indirection as
+   --font-inter -> --font-sans and --font-mono-jb -> --font-mono.
+
+   No `weight`: the Google file is a 300-700 variable font, and Tailwind's
+   preflight resets headings to `font-weight: inherit`, so a bare <h3> added
+   later would land on a weight a static subset might not carry and get
+   synthesised into a fake bold. */
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-space-grotesk',
 })
 
 export const metadata: Metadata = {
@@ -134,7 +156,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
@@ -159,6 +181,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to content
         </a>
+        {/* Decoration, and the one client component here. Mounted in the layout
+            rather than on the home page so it does not vanish on a project
+            page, which would read as a bug rather than as scoping. It renders
+            nothing at all on a coarse pointer or under reduced motion. */}
+        <PointerHalo />
         {children}
       </body>
     </html>

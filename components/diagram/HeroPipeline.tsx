@@ -16,9 +16,15 @@ import { FlowDiagram } from './FlowDiagram'
  *
  * Below `lg` the SVG is display:none and the shared FlowDiagram renders the
  * same graph as a readable vertical flow. `lg` is where Hero.tsx opens its
- * second column — the 500px track this viewBox is drawn for — so the two
- * breakpoints must stay in step. Revealing the SVG any earlier stretches it
- * across the full single-column shell, where it stands ~805px tall at 768px.
+ * second column, so that breakpoint and this one must stay in step: revealing
+ * the SVG any earlier stretches it across the full single-column shell, where
+ * it stands ~805px tall at 768px.
+ *
+ * The 500-unit viewBox is a design width, not a rendered one. The element is
+ * `w-full` and scales uniformly, so the track may be any size at or above the
+ * `lg` figure — Hero.tsx widens it to 560px at `2xl`, which is a scale factor
+ * and not a redraw. Label sizes scale with it by the same factor, which is the
+ * intent.
  */
 
 /** One full packet traverse. Node flashes are phased against this. */

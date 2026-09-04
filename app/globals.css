@@ -197,8 +197,24 @@
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono-jb), ui-monospace, 'SFMono-Regular', monospace;
 
+  /* Headings. Inter is named ahead of the generics on purpose: this family only
+     ever sets large type, where falling through to a system sans with different
+     metrics reads as a reflow rather than a change of texture. next/font emits
+     its own size-adjusted local fallback ahead of all of these, so they are the
+     last resort rather than the first.
+
+     Checked against the --color-base trap documented above: `font-display` is a
+     @font-face *descriptor*, never a property, and Tailwind ships no built-in
+     `font-display` utility, so this shadows nothing. */
+  --font-display: var(--font-space-grotesk), var(--font-inter), ui-sans-serif, system-ui,
+    sans-serif;
+
   --text-display: clamp(2.25rem, 1.2rem + 4.4vw, 4.25rem);
   --text-section: clamp(1.75rem, 1.2rem + 2.2vw, 2.75rem);
+
+  /* Tailwind v4 stops at 2xl (96rem). The shell runs to the viewport now, so the
+     widest layout decisions — Skills going five across — need a name past that. */
+  --breakpoint-3xl: 120rem;
 }
 
 /* ---------------------------------------------------------------------------
@@ -245,8 +261,25 @@
   h2,
   h3,
   h4 {
+    /* Space Grotesk sets every heading; body copy stays Inter. As a base rule
+       rather than a utility at each call site because there are fourteen
+       headings across nine files, and a base rule cannot be forgotten on the
+       fifteenth.
+
+       Headings that are deliberately monospace — the `mono-label` h3s in About,
+       ProblemSolving and the project page — are unaffected: @utility output
+       lands in @layer utilities, which outranks @layer base whatever the
+       specificity.
+
+       The hero's display line is a <p>, not an <h*> (its real <h1> is sr-only),
+       so it carries the `font-display` utility explicitly. */
+    font-family: var(--font-display);
     text-wrap: balance;
-    letter-spacing: -0.02em;
+    /* Was -0.02em, measured for Inter. Space Grotesk is a grotesque with tighter
+       default sidebearings and a taller x-height, so Inter's tracking
+       over-tightens it — most visibly around the round letterforms, which are
+       already close. -0.01em lands the same optical fit. */
+    letter-spacing: -0.01em;
   }
 
   p {
@@ -257,9 +290,24 @@
 /* ---------------------------------------------------------------------------
    Utilities
 --------------------------------------------------------------------------- */
+/* This is a gutter, not a page width.
+
+   The site runs edge to edge: the header, the footer, the section rules, the
+   card grids, the metrics strip and the diagrams all span the viewport, and the
+   only thing that stops growing is running text — see the `measure` utilities
+   below. There is deliberately no `max-width`.
+
+   The gutter has to grow with the field or the content welds itself to the
+   bezel, hence the three steps past 1280 that did not exist when the content
+   stopped at 1152px. Type is unaffected either way: --text-display and
+   --text-section both reach their clamp ceiling at ~1220px of viewport, so
+   widening the shell changes measures and never sizes.
+
+   Note that `Section` in components/ui/primitives.tsx already puts its border on
+   the <section> with the shell *inside* it, so every horizontal rule on the site
+   was full-bleed before this change and still is. */
 @utility shell {
   width: 100%;
-  max-width: 78rem;
   margin-inline: auto;
   padding-inline: 1.25rem;
 
@@ -270,6 +318,44 @@
   @media (min-width: 1280px) {
     padding-inline: 3rem;
   }
+
+  @media (min-width: 1536px) {
+    padding-inline: 4rem;
+  }
+
+  @media (min-width: 1920px) {
+    padding-inline: 5rem;
+  }
+
+  @media (min-width: 2560px) {
+    padding-inline: 8rem;
+  }
+}
+
+/* Reading measure.
+
+   `shell` no longer caps the page, so nothing else stops a paragraph running the
+   full width of a 1920px display. These do.
+
+   They are deliberately the same three values that were already in use as
+   max-w-2xl / max-w-3xl / max-w-4xl across six files, promoted to names so that
+   "how wide may a line of text be" is answered in one place instead of being
+   rediscovered at each call site. Because the values are unchanged, converting a
+   call site is a rename and not a reflow.
+
+   In rem, not ch. A ch measure tracks font-size, which is right for body copy
+   and badly wrong for a heading: 68ch at the display clamp's 68px ceiling is
+   1795px, which is not a measure at all. */
+@utility measure {
+  max-width: 42rem; /* was max-w-2xl — body copy, ledes, supporting text */
+}
+
+@utility measure-lg {
+  max-width: 48rem; /* was max-w-3xl — section headings, long-form paragraphs */
+}
+
+@utility measure-xl {
+  max-width: 56rem; /* was max-w-4xl — the project detail H1 */
 }
 
 /* Faint engineering grid. One gradient, no image asset, hero only. */
@@ -345,6 +431,88 @@
   }
 }
 
+/* Pointer halo. components/ui/PointerHalo.tsx decides only whether and where;
+   everything visual is here.
+
+   The negative z-index is the whole trick. A `position: fixed` box at z-index 0
+   paints at step 6 of the stacking order — above non-positioned block
+   backgrounds AND above inline content, i.e. over the text. At -1 it paints at
+   step 2: above the canvas background (which is body's, propagated to the root)
+   and below everything else in the document. So it sits above the hero grid at
+   -10 and washes over its lines, and below the header, the mobile sheet and the
+   skip link. It is also *behind* every opaque `surface` and `raised` panel,
+   which is what makes the contrast guardrail on --accent-soft unreachable
+   rather than merely unviolated: the halo cannot stack on `raised`, so the
+   5.22/5.07 `dim`-on-`raised` pairs are untouched. Only text painted directly
+   on the canvas is ever affected, and there `dim` lands at 5.21 light / 5.00
+   dark — still past AA.
+
+   A gradient, not `filter: blur()`. The falloff reads the same, but a filter
+   expands the layer bounds by roughly 3σ on every side and forces a
+   re-rasterisation pass; a gradient is painted once into a promoted layer and
+   thereafter only translated.
+
+   The inner stop is --accent-soft verbatim rather than a fresh mix. That token
+   is already contrast-audited in both themes, so the halo at its brightest can
+   never tint a surface harder than something the palette already certifies. Do
+   not raise it.
+
+   No mix-blend-mode: `screen` is a no-op against light's white canvas and
+   `multiply` a no-op against dark's, and either one makes the composited result
+   something other than color-mix(accent, canvas) — the only form the contrast
+   arithmetic above can actually check. */
+.pointer-halo {
+  position: fixed;
+  /* Anchored at the origin; the component's transform does all positioning.
+     top/left are never written per frame — that would be a layout every frame
+     instead of a composited transform. */
+  top: 0;
+  left: 0;
+  z-index: -1;
+
+  width: 16rem;
+  height: 16rem;
+
+  pointer-events: none;
+  /* Paint containment isolates the subtree for the compositor. `position: fixed`
+     already keeps this out of the document's scrollable overflow — body's
+     `overflow-x: clip` is not what protects us, since it does not clip a
+     viewport-anchored box. */
+  contain: strict;
+
+  /* Fades in on the first pointer sample rather than sitting at 0,0 waiting. */
+  opacity: 0;
+  transition: opacity 400ms linear;
+
+  will-change: transform;
+}
+
+/* The gradient is guarded, and the guard is load-bearing rather than defensive.
+
+   Every color-mix() in this file compiles to a plain `var(--accent)` fallback
+   outside an @supports rule — that is what the note at the top of the file is
+   about. For a chip or a 1px node outline that degradation is cosmetic: the
+   element goes fully saturated and stays legible. For a 256px radial gradient
+   it is not. The stops here would each fall back to opaque accent, painting a
+   solid disc over whatever body copy the pointer happens to be near.
+
+   So the whole background lives inside the guard, and an engine without
+   color-mix() gets a halo with no background — i.e. nothing at all. Decoration
+   must never cost legibility, which is a stricter bar than the tokens this
+   borrows from have to meet. */
+@supports (color: color-mix(in oklab, red, red)) {
+  .pointer-halo {
+    background-image: radial-gradient(
+      closest-side,
+      var(--accent-soft) 0%,
+      color-mix(in oklab, var(--accent) 7%, transparent) 30%,
+      color-mix(in oklab, var(--accent) 3%, transparent) 55%,
+      color-mix(in oklab, var(--accent) 1%, transparent) 78%,
+      transparent 100%
+    );
+  }
+}
+
 /* Scroll reveal. Starts hidden and is switched on by IntersectionObserver
    adding [data-visible]; if JS never runs, the no-JS rule below shows it. */
 .reveal {
@@ -387,5 +555,12 @@
   [data-flow-pulse] {
     display: none !important;
     animation: none !important;
+  }
+
+  /* PointerHalo unmounts itself under this preference; this is the belt to that
+     brace, and it is what keeps the claim at the top of this section true —
+     every animated behaviour on the site is switched off from here. */
+  .pointer-halo {
+    display: none !important;
   }
 }

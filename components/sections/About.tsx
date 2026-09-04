@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { about, profile } from '@/content/profile'
 import { education, accomplishments } from '@/content/experience'
+import { formatRange } from '@/lib/dates'
 import { Section, SectionHeader } from '@/components/ui/primitives'
 import { Reveal } from '@/components/ui/Reveal'
 
@@ -15,17 +16,17 @@ export function About() {
         lede={about.lead}
       />
 
-      <div className="grid gap-12 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:gap-16">
+      <div className="grid gap-12 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:gap-16 2xl:gap-24">
         <Reveal>
           <div className="space-y-5">
             {about.body.map((paragraph) => (
-              <p key={paragraph.slice(0, 32)} className="text-base leading-relaxed text-muted">
+              <p key={paragraph.slice(0, 32)} className="measure text-base leading-relaxed text-muted">
                 {paragraph}
               </p>
             ))}
           </div>
 
-          <p className="mt-8 border-l-2 border-accent/50 pl-5 text-lg leading-snug font-medium text-ink">
+          <p className="measure mt-8 border-l-2 border-accent/50 pl-5 text-lg leading-snug font-medium text-ink">
             {about.emphasis}
           </p>
         </Reveal>
@@ -51,7 +52,7 @@ export function About() {
               <p className="text-sm font-medium text-ink">{education.school}</p>
               <p className="mt-1 text-sm text-muted">{education.degree}</p>
               <p className="mt-2 font-mono text-xs text-dim">
-                {education.period} · {education.location}
+                {formatRange(education.start, education.end)} · {education.location}
               </p>
             </div>
 
