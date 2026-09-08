@@ -268,7 +268,7 @@ export default async function ProjectPage({ params }: { params: Promise<Params> 
               <div>
                 <p className="mono-label mb-2">Next project</p>
                 <Link
-                  href={`/projects/${next?.slug ?? ''}`}
+                  href={`/projects/${next?.slug ?? ''}/`}
                   className="text-xl font-semibold text-ink transition-colors hover:text-accent"
                 >
                   {next?.name}

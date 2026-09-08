@@ -156,6 +156,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
+      /* Tells Next to suspend the CSS `scroll-behavior: smooth` in globals.css
+         while it resets scroll on a route change. Without it the reset animates,
+         the incoming render interrupts the animation, and a project page opens at
+         whatever offset the reader left the home page on. Anchor navigation still
+         scrolls smoothly — the attribute only scopes the framework's own jumps. */
+      data-scroll-behavior="smooth"
       className={`${inter.variable} ${jetbrainsMono.variable} ${spaceGrotesk.variable}`}
     >
       <head>
