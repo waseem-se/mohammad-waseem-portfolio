@@ -1,4 +1,4 @@
-import type { Company, FlowGraph, FlowKind, FlowNode, ImpactKind, Project } from '@/content/types'
+import type { FlowGraph, FlowKind, FlowNode, Project } from '@/content/types'
 
 /**
  * Derived chart data.
@@ -223,62 +223,4 @@ export function techSingletonCount(projects: Project[]): number {
     for (const name of project.tech) seen.set(name, (seen.get(name) ?? 0) + 1)
   }
   return [...seen.values()].filter((n) => n === 1).length
-}
-
-/* -------------------------------------------------------------------------- */
-/* Impact figures                                                             */
-/* -------------------------------------------------------------------------- */
-
-export type ImpactDatum = {
-  /**
-   * Stable identity for the charts that render this figure.
-   *
-   * `label` cannot serve: it is a sentence fragment authored per highlight —
-   * 'Less processing time', 'Less reporting time' — and two roles reporting the
-   * same kind of win would write the same one. The role plus the highlight's
-   * position within that role is unique by construction.
-   */
-  id: string
-  /** The number the bar length encodes. */
-  value: number
-  /** Rendered verbatim, so the '%' survives. */
-  display: string
-  label: string
-  roleId: string
-  kind: ImpactKind
-}
-
-/**
- * Every `impact` in `companies`, flattened with the role that produced it.
- *
- * A figure without a parseable leading number is dropped rather than charted at
- * zero — a bar of length zero is a claim, and the wrong one.
- */
-export function impactData(companies: Company[]): ImpactDatum[] {
-  const out: ImpactDatum[] = []
-
-  for (const company of companies) {
-    for (const role of company.roles) {
-      role.highlights.forEach((highlight, i) => {
-        const impact = highlight.impact
-        if (!impact) return
-
-        const match = impact.value.match(/(\d+(?:\.\d+)?)/)
-        if (!match?.[1]) return
-
-        out.push({
-          /* Indexed within the role, not within `out`: dropping an unparseable
-             figure then shifts no other row's key. */
-          id: `${role.id}-h${i}`,
-          value: Number(match[1]),
-          display: impact.value,
-          label: impact.label,
-          roleId: role.id,
-          kind: impact.kind,
-        })
-      })
-    }
-  }
-
-  return out
 }

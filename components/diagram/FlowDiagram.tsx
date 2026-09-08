@@ -13,6 +13,9 @@ import type { FlowGraph, FlowKind, FlowNode } from '@/content/types'
  * without a parallel description.
  */
 
+/** A store hanging off a stage, paired with whether the stage reads it back. */
+type Aside = { node: FlowNode; bidirectional?: boolean }
+
 /**
  * Unlike the hero SVG, which derives its property names from `node.kind`, this
  * has to spell every class out: Tailwind's scanner only sees literal strings, so
@@ -32,7 +35,19 @@ const kindStyles: Record<FlowKind, { dot: string; border: string }> = {
   human: { dot: 'bg-node-human', border: 'border-node-human-line' },
 }
 
-function Node({ node, compact }: { node: FlowNode; compact?: boolean }) {
+function Node({
+  node,
+  compact,
+  attached,
+}: {
+  node: FlowNode
+  compact?: boolean
+  /* Stores this node queries. They get their own box in the gutter once the
+     container is wide enough; below that they fold in here, because a store
+     drawn under its host with nowhere to put the connector reads as the next
+     stage in the chain — the one thing `attachedTo` exists to prevent. */
+  attached?: Aside[]
+}) {
   const style = kindStyles[node.kind]
   /* The one probabilistic stage in any of these graphs. Drawn provisional —
      dashed outline, hollow dot — because the site's whole argument is that
@@ -70,6 +85,13 @@ function Node({ node, compact }: { node: FlowNode; compact?: boolean }) {
         {node.note && !compact ? (
           <span className="mt-1 block text-[0.6875rem] leading-tight text-dim">{node.note}</span>
         ) : null}
+        {attached?.length ? (
+          <span className="mt-1 block font-mono text-[0.625rem] leading-tight text-dim @2xl:hidden">
+            {attached
+              .map((store) => `${store.bidirectional ? '\u21c4' : '\u2192'} ${store.node.label}`)
+              .join('   ')}
+          </span>
+        ) : null}
       </span>
       <span className="sr-only"> ({kindLabel[node.kind]})</span>
     </div>
@@ -104,13 +126,18 @@ function Connector({ label, compact }: { label?: string; compact?: boolean }) {
  */
 function LateralConnector({ bidirectional }: { bidirectional?: boolean }) {
   return (
-    <span
-      className="relative flex h-px w-6 shrink-0 items-center self-center bg-hairline-strong"
-      aria-hidden
-    >
-      <span className="absolute -right-px size-1.5 -translate-y-[3px] -rotate-45 border-t border-r border-hairline-strong" />
+    /* `top-1/2` + `-translate-y-1/2` rather than the parent's `items-center`:
+       the static position of an absolutely positioned flex child is not treated
+       the same way across engines, and centring a 6px glyph on a 1px bar that
+       way needed a magic offset that left the chevrons floating above the line. */
+    <span className="relative h-px w-6 shrink-0 self-center bg-hairline-strong" aria-hidden>
+      {/* `border-t border-r` corners at the top right, so the glyph points
+          up-right at 0deg: +45deg aims it east, +225deg west. The old -45/135deg
+          pair aimed them north and south — invisible while this connector was a
+          stub joined to nothing, plainly wrong once it spans two boxes. */}
+      <span className="absolute top-1/2 -right-px size-1.5 -translate-y-1/2 rotate-45 border-t border-r border-hairline-strong" />
       {bidirectional ? (
-        <span className="absolute -left-px size-1.5 -translate-y-[3px] rotate-[135deg] border-t border-r border-hairline-strong" />
+        <span className="absolute top-1/2 -left-px size-1.5 -translate-y-1/2 rotate-[225deg] border-t border-r border-hairline-strong" />
       ) : null}
     </span>
   )
@@ -226,7 +253,7 @@ export function FlowDiagram({
   }
 
   const sequence: (
-    | { type: 'node'; node: FlowNode; edgeLabel?: string; aside: FlowNode[] }
+    | { type: 'node'; node: FlowNode; edgeLabel?: string; aside: Aside[] }
     | { type: 'lanes'; branches: { label: string; nodes: FlowNode[] }[] }
   )[] = []
 
@@ -240,7 +267,14 @@ export function FlowDiagram({
       type: 'node',
       node,
       edgeLabel: incoming?.label,
-      aside: attachedToHost.get(node.id) ?? [],
+      /* Resolved here rather than in the render: both the gutter box and the
+         folded sub-line need it, and looking the edge up twice invites them to
+         disagree about the same relationship. */
+      aside: (attachedToHost.get(node.id) ?? []).map((store) => ({
+        node: store,
+        bidirectional: graph.edges.find((e) => e.from === node.id && e.to === store.id)
+          ?.bidirectional,
+      })),
     })
     emitted.add(node.id)
 
@@ -251,6 +285,7 @@ export function FlowDiagram({
   }
 
   const hasLanes = (graph.lanes?.length ?? 0) > 0
+  const hasAsides = attachedToHost.size > 0
 
   return (
     <figure
@@ -262,69 +297,70 @@ export function FlowDiagram({
       <div
         aria-hidden
         className={cn(
-          'flex w-full flex-col items-center',
-          // Branching graphs need room to lay lanes side by side.
-          hasLanes ? 'max-w-2xl' : 'max-w-md',
+          'grid w-full',
+          /* A graph with a lateral store gets a right-hand gutter for it, so the
+             store sits level with the stage that queries it. Above the threshold
+             the block is a fixed 28rem + 12rem and `w-fit` lets the figure centre
+             it; below, it collapses to the plain 28rem column and the stores fold
+             into their hosts. Branching graphs need room to lay lanes side by
+             side instead. */
+          hasAsides
+            ? 'max-w-md @2xl:w-fit @2xl:max-w-none'
+            : hasLanes
+              ? 'max-w-2xl'
+              : 'max-w-md',
         )}
       >
         {sequence.map((item, i) => (
           <div
             key={item.type === 'node' ? item.node.id : `lanes-${i}`}
-            className="flex w-full flex-col items-center"
+            /* Every row repeats the same column template, which is the invariant
+               the diagram rests on: the main column is the same width whether or
+               not this particular row has anything in the gutter, so the spine
+               cannot wander. Sizing the host with `flex-1` instead would recentre
+               it row by row. */
+            className={cn('grid w-full grid-cols-1', hasAsides && '@2xl:grid-cols-[28rem_12rem]')}
           >
-            {i > 0 ? (
-              <Connector
-                label={item.type === 'node' ? item.edgeLabel : undefined}
-                compact={compact}
-              />
-            ) : null}
-            {item.type === 'node' ? (
-              <>
-                <Node node={item.node} compact={compact} />
-                {/* Hangs to the lower right of its host, off the spine, joined by
-                    a two-way connector — so it reads as a lookup the host makes
-                    rather than the next stage in the chain. */}
-                {item.aside.map((aside) => (
-                  <div key={aside.id} className="flex w-[68%] items-center self-end pt-2">
-                    <LateralConnector
-                      bidirectional={
-                        graph.edges.find((e) => e.from === item.node.id && e.to === aside.id)
-                          ?.bidirectional
-                      }
-                    />
+            {/* The spine. Connectors belong in this column rather than in a row
+                of their own, so they centre on the main column and not on the
+                wider box the gutter opens up. */}
+            <div className="flex min-w-0 flex-col items-center">
+              {i > 0 ? (
+                <Connector
+                  label={item.type === 'node' ? item.edgeLabel : undefined}
+                  compact={compact}
+                />
+              ) : null}
+              {item.type === 'node' ? (
+                <Node node={item.node} compact={compact} attached={item.aside} />
+              ) : (
+                <Lanes branches={item.branches} />
+              )}
+            </div>
+
+            {/* The gutter. Offset by the incoming connector's own height so the
+                lateral line meets the middle of the host box rather than the
+                middle of the row, without measuring anything. */}
+            {item.type === 'node' && item.aside.length > 0 ? (
+              <div
+                className={cn(
+                  'hidden @2xl:flex @2xl:flex-col @2xl:justify-center @2xl:gap-2',
+                  i > 0 && (compact ? '@2xl:pt-4' : '@2xl:pt-6'),
+                )}
+              >
+                {item.aside.map((store) => (
+                  <div key={store.node.id} className="flex items-center">
+                    <LateralConnector bidirectional={store.bidirectional} />
                     <span className="min-w-0 flex-1">
-                      <Node node={aside} compact />
+                      <Node node={store.node} compact />
                     </span>
                   </div>
                 ))}
-              </>
-            ) : (
-              <Lanes branches={item.branches} />
-            )}
+              </div>
+            ) : null}
           </div>
         ))}
       </div>
     </figure>
-  )
-}
-
-/**
- * Condensed preview for project cards: the flow as a single wrapping chain of
- * monospace labels. Same data, no boxes — enough to signal shape at a glance
- * without competing with the card's text.
- */
-export function FlowPreview({ graph }: { graph: FlowGraph }) {
-  const labels = graph.nodes.map((n) => n.label)
-  return (
-    <div aria-hidden className="flex flex-wrap items-center gap-x-1.5 gap-y-1.5">
-      {labels.map((label, i) => (
-        <span key={label} className="flex items-center gap-1.5">
-          {i > 0 ? <span className="font-mono text-[0.625rem] text-dim">→</span> : null}
-          <span className="rounded border border-hairline bg-raised px-1.5 py-0.5 font-mono text-[0.625rem] text-muted">
-            {label}
-          </span>
-        </span>
-      ))}
-    </div>
   )
 }

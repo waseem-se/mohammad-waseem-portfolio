@@ -125,8 +125,14 @@ export type Highlight = {
  * or a *change in* a level, not a fall against a baseline; drawing it beside a
  * reduction on one 0-100% axis makes "95% accurate" read as a larger achievement
  * than "75% fewer unsafe outputs", which it is not — they are not the same
- * quantity. components/sections/ImpactChart.tsx splits on this rather than
- * mixing them and apologising in a caption.
+ * quantity.
+ *
+ * Nothing reads this at the moment — the bar chart that split on it is gone,
+ * because the figures were already on the page twice over. It stays because the
+ * distinction is a property of the data rather than of that chart, and it is not
+ * recoverable by looking at the values: '95%' and '75%' are indistinguishable
+ * until something records which is a level and which is a fall. Any future chart
+ * of these figures needs it to avoid putting them on one axis.
  */
 export type ImpactKind = 'reduction' | 'accuracy'
 
